@@ -1,0 +1,198 @@
+module ipgen_{{ userlogic_name.lower() }} #
+  (
+   //---------------------------------------------------------------------------
+   // User-defined parameter in Top-level User logic
+   // DO NOT modify. They are NOT passed through to the instance
+   //---------------------------------------------------------------------------
+{%- for param in def_top_parameters %}
+   {{ param }}
+{%- endfor %}
+
+   //---------------------------------------------------------------------------
+   // parameters
+   //---------------------------------------------------------------------------
+   parameter W_EXT_A = {{ ext_addrwidth }},
+   parameter W_BLEN = {{ ext_burstlen_width }}
+   )
+  (
+   //---------------------------------------------------------------------------
+   // External
+   //---------------------------------------------------------------------------
+{% for master in masterlist | sort(attribute='name') %}
+   // Clock and Reset
+   input  wire {{ master.name }}_ext_clk,
+   input  wire {{ master.name }}_ext_rst,
+
+   // Master Interface Write Address
+   output wire [W_EXT_A-1:0] {{ master.name }}_awaddr,
+   output wire [W_BLEN-1:0] {{ master.name }}_awlen,
+{%- if not master.lite %}
+   output wire {{ master.name }}_awvalid,
+{%- endif %}
+   input wire {{ master.name }}_awready,
+   
+   // Master Interface Write Data
+   output wire [{{ master.datawidth }}-1:0] {{ master.name }}_wdata,
+   output wire [({{ master.datawidth }}/8)-1:0] {{ master.name }}_wstrb,
+{%- if not master.lite %}
+   output wire {{ master.name }}_wlast,
+{%- endif %}
+   output wire {{ master.name }}_wvalid,
+   input wire {{ master.name }}_wready,
+   
+   // Master Interface Read Address
+   output wire [W_EXT_A-1:0] {{ master.name }}_araddr,
+{%- if not master.lite %}
+   output wire [W_BLEN-1:0] {{ master.name }}_arlen,
+{%- endif %}
+   output wire {{ master.name }}_arvalid,
+   input wire {{ master.name }}_arready,
+   
+   // Master Interface Read Data 
+   input wire [{{ master.datawidth }}-1:0] {{ master.name }}_rdata,
+{%- if not master.lite %}
+   input wire {{ master.name }}_rlast,
+{%- endif %}
+   input wire {{ master.name }}_rvalid,
+   output wire {{ master.name }}_rready,
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+   // Clock and Reset
+   input  wire {{ slave.name }}_ext_clk,
+   input  wire {{ slave.name }}_ext_rst,
+
+   // Master Interface Write Address
+   output wire [W_EXT_A-1:0] {{ slave.name }}_awaddr,
+{%- if not slave.lite %}
+   output wire [W_BLEN-1:0] {{ slave.name }}_awlen,
+{%- endif %}
+   output wire {{ slave.name }}_awvalid,
+   input wire {{ slave.name }}_awready,
+   
+   // Master Interface Write Data
+   output wire [{{ slave.datawidth }}-1:0] {{ slave.name }}_wdata,
+   output wire [({{ slave.datawidth }}/8)-1:0] {{ slave.name }}_wstrb,
+{%- if not slave.lite %}
+   output wire {{ slave.name }}_wlast,
+{%- endif %}
+   output wire {{ slave.name }}_wvalid,
+   input wire {{ slave.name }}_wready,
+   output wire {{ slave.name }}_bready,
+   
+   // Master Interface Read Address
+   output wire [W_EXT_A-1:0] {{ slave.name }}_araddr,
+{%- if not slave.lite %}
+   output wire [W_BLEN-1:0] {{ slave.name }}_arlen,
+{%- endif %}
+   output wire {{ slave.name }}_arvalid,
+   input wire {{ slave.name }}_arready,
+   
+   // Master Interface Read Data 
+   input wire [{{ slave.datawidth }}-1:0] {{ slave.name }}_rdata,
+{%- if not slave.lite %}
+   input wire {{ slave.name }}_rlast,
+{%- endif %}
+   input wire {{ slave.name }}_rvalid,
+   output wire {{ slave.name }}_rready,
+{% endfor %}
+
+   //---------------------------------------------------------------------------
+   // User-defined I/O ports in Top-level User logic
+   //---------------------------------------------------------------------------
+{%- for ioport in def_top_ioports | sort() %}
+   {{ ioport }},
+{%- endfor %}
+
+   //----------------------------------------------------------------------------
+   // User-logic Clock and Reset
+   //----------------------------------------------------------------------------
+   input wire UCLK,
+   input wire URST
+   );
+
+  //---------------------------------------------------------------------------
+  // User-defined localparam in Top-level User logic
+  //---------------------------------------------------------------------------
+{%- for param in def_top_localparams %}
+  {{ param }}
+{%- endfor %}
+
+  //----------------------------------------------------------------------------
+  // User Logic
+  //----------------------------------------------------------------------------
+  {{ userlogic_name }}
+  inst_{{ userlogic_name }}
+    (
+{% for master in masterlist | sort(attribute='name') %}
+     .ext_awaddr({{ master.name }}_awaddr),
+{%- if not master.lite %}
+     .ext_awlen({{ master.name }}_awlen),
+{%- endif %}
+     .ext_awvalid({{ master.name }}_awvalid),
+     .ext_awready({{ master.name }}_awready),
+
+     .ext_wdata({{ master.name }}_wdata),
+     .ext_wstrb({{ master.name }}_wstrb),
+{%- if not master.lite %}
+     .ext_wlast({{ master.name }}_wlast),
+{%- endif %}
+     .ext_wvalid({{ master.name }}_wvalid),
+     .ext_wready({{ master.name }}_wready),
+
+     .ext_araddr({{ master.name }}_araddr),
+{%- if not master.lite %}
+     .ext_arlen({{ master.name }}_arlen),
+{%- endif %}
+     .ext_arvalid({{ master.name }}_arvalid),
+     .ext_arready({{ master.name }}_arready),
+
+     .ext_rdata({{ master.name }}_rdata),
+{%- if not master.lite %}
+     .ext_rlast({{ master.name }}_rlast),
+{%- endif %}
+     .ext_rvalid({{ master.name }}_rvalid),
+     .ext_rready({{ master.name }}_rready),
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+     .ext_awaddr({{ slave.name }}_awaddr),
+{%- if not slave.lite %}
+     .ext_awlen({{ slave.name }}_awlen),
+{%- endif %}
+     .ext_awvalid({{ slave.name }}_awvalid),
+     .ext_awready({{ slave.name }}_awready),
+
+     .ext_wdata({{ slave.name }}_wdata),
+     .ext_wstrb({{ slave.name }}_wstrb),
+{%- if not slave.lite %}
+     .ext_wlast({{ slave.name }}_wlast),
+{%- endif %}
+     .ext_wvalid({{ slave.name }}_wvalid),
+     .ext_wready({{ slave.name }}_wready),
+
+     .ext_araddr({{ slave.name }}_araddr),
+{%- if not slave.lite %}
+     .ext_arlen({{ slave.name }}_arlen),
+{%- endif %}
+     .ext_arvalid({{ slave.name }}_arvalid),
+     .ext_arready({{ slave.name }}_arready),
+
+     .ext_rdata({{ slave.name }}_rdata),
+{%- if not slave.lite %}
+     .ext_rlast({{ slave.name }}_rlast),
+{%- endif %}
+     .ext_rvalid({{ slave.name }}_rvalid),
+     .ext_rready({{ slave.name }}_rready),
+{% endfor %}
+
+{%- for ioport in name_top_ioports | sort() %}
+     .{{ ioport }}({{ ioport }}),
+{%- endfor %}
+
+     .CLK(UCLK), // User-logic clock
+     .RST(URST) // User-logic reset
+     );
+
+endmodule
+

@@ -1,0 +1,678 @@
+module ipgen_{{ userlogic_name.lower() }} #
+  (
+   //---------------------------------------------------------------------------
+   // User-defined parameter in Top-level User logic
+   // DO NOT modify. They are NOT passed through to the instance
+   //---------------------------------------------------------------------------
+{%- for param in def_top_parameters %}
+   {{ param }}
+{%- endfor %}
+
+   //----------------------------------------------------------------------------
+   // AXI Parameter
+   //----------------------------------------------------------------------------
+{% for master in masterlist | sort(attribute='name') %}
+   // Master {{ master.name }}
+   parameter integer C_{{ master.name }}_AXI_DATA_WIDTH = {{ master.datawidth }},
+   parameter integer C_{{ master.name }}_AXI_ADDR_WIDTH = {{ ext_addrwidth }},
+{%- if not master.lite %}
+   parameter integer C_{{ master.name }}_AXI_THREAD_ID_WIDTH = 1,
+   parameter integer C_{{ master.name }}_AXI_AWUSER_WIDTH = 1,
+   parameter integer C_{{ master.name }}_AXI_ARUSER_WIDTH = 1,
+   parameter integer C_{{ master.name }}_AXI_WUSER_WIDTH = 1,
+   parameter integer C_{{ master.name }}_AXI_RUSER_WIDTH = 1,
+   parameter integer C_{{ master.name }}_AXI_BUSER_WIDTH = 1,
+   parameter integer C_{{ master.name }}_AXI_SUPPORTS_WRITE = 1,
+   parameter integer C_{{ master.name }}_AXI_SUPPORTS_READ = 1,
+{%- endif %}
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+   // Slave {{ slave.name }}
+   parameter integer C_{{ slave.name }}_AXI_DATA_WIDTH = {{ slave.datawidth }},
+   parameter integer C_{{ slave.name }}_AXI_ADDR_WIDTH = {{ slave.addrwidth }}, 
+{%- if not slave.lite %}
+   parameter integer C_{{ slave.name }}_AXI_ID_WIDTH = 1,
+   parameter integer C_{{ slave.name }}_AXI_AWUSER_WIDTH = 1,
+   parameter integer C_{{ slave.name }}_AXI_ARUSER_WIDTH = 1,
+   parameter integer C_{{ slave.name }}_AXI_WUSER_WIDTH = 1,
+   parameter integer C_{{ slave.name }}_AXI_RUSER_WIDTH = 1,
+   parameter integer C_{{ slave.name }}_AXI_BUSER_WIDTH = 1,
+   parameter integer C_{{ slave.name }}_AXI_SUPPORTS_WRITE = 1,
+   parameter integer C_{{ slave.name }}_AXI_SUPPORTS_READ = 1,
+{%- endif %}
+{% endfor %}
+
+   // Address offset on DRAM
+   parameter C_M_AXI_TARGET = 'h00000000
+   )
+  (
+   //----------------------------------------------------------------------------
+   // AXI Interface
+   //----------------------------------------------------------------------------
+{% for master in masterlist | sort(attribute='name') %}
+   // Clock and Reset
+   input  wire {{ master.name }}_AXI_ACLK,
+   input  wire {{ master.name }}_AXI_ARESETN,
+
+   // Master Interface Write Address
+{%- if not master.lite %}
+   output wire [C_{{ master.name }}_AXI_THREAD_ID_WIDTH-1:0] {{ master.name }}_AXI_AWID,
+{%- endif %}
+   output wire [C_{{ master.name }}_AXI_ADDR_WIDTH-1:0] {{ master.name }}_AXI_AWADDR,
+{%- if not master.lite %}
+   output wire [8-1:0] {{ master.name }}_AXI_AWLEN,
+   output wire [3-1:0] {{ master.name }}_AXI_AWSIZE,
+   output wire [2-1:0] {{ master.name }}_AXI_AWBURST,
+   output wire {{ master.name }}_AXI_AWLOCK,
+   output wire [4-1:0] {{ master.name }}_AXI_AWCACHE,
+{%- endif %}
+   output wire [3-1:0] {{ master.name }}_AXI_AWPROT,
+{%- if not master.lite %}
+   output wire [4-1:0] {{ master.name }}_AXI_AWQOS,
+   output wire [C_{{ master.name }}_AXI_AWUSER_WIDTH-1:0] {{ master.name }}_AXI_AWUSER,
+{%- endif %}
+   output wire {{ master.name }}_AXI_AWVALID,
+   input  wire {{ master.name }}_AXI_AWREADY,
+   
+   // Master Interface Write Data
+   output wire [C_{{ master.name }}_AXI_DATA_WIDTH-1:0] {{ master.name }}_AXI_WDATA,
+   output wire [C_{{ master.name }}_AXI_DATA_WIDTH/8-1:0] {{ master.name }}_AXI_WSTRB,
+{%- if not master.lite %}
+   output wire {{ master.name }}_AXI_WLAST,
+   output wire [C_{{ master.name }}_AXI_WUSER_WIDTH-1:0] {{ master.name }}_AXI_WUSER,
+{%- endif %}
+   output wire {{ master.name }}_AXI_WVALID,
+   input  wire {{ master.name }}_AXI_WREADY,
+   
+   // Master Interface Write Response
+{%- if not master.lite %}
+   input  wire [C_{{ master.name }}_AXI_THREAD_ID_WIDTH-1:0] {{ master.name }}_AXI_BID,
+{%- endif %}
+   input  wire [2-1:0] {{ master.name }}_AXI_BRESP,
+{%- if not master.lite %}
+   input  wire [C_{{ master.name }}_AXI_BUSER_WIDTH-1:0] {{ master.name }}_AXI_BUSER,
+{%- endif %}
+   input  wire {{ master.name }}_AXI_BVALID,
+   output wire {{ master.name }}_AXI_BREADY,
+   
+   // Master Interface Read Address
+{%- if not master.lite %}
+   output wire [C_{{ master.name }}_AXI_THREAD_ID_WIDTH-1:0] {{ master.name }}_AXI_ARID,
+{%- endif %}
+   output wire [C_{{ master.name }}_AXI_ADDR_WIDTH-1:0] {{ master.name }}_AXI_ARADDR,
+{%- if not master.lite %}
+   output wire [8-1:0] {{ master.name }}_AXI_ARLEN,
+   output wire [3-1:0] {{ master.name }}_AXI_ARSIZE,
+   output wire [2-1:0] {{ master.name }}_AXI_ARBURST,
+   output wire [2-1:0] {{ master.name }}_AXI_ARLOCK,
+   output wire [4-1:0] {{ master.name }}_AXI_ARCACHE,
+{%- endif %}
+   output wire [3-1:0] {{ master.name }}_AXI_ARPROT,
+{%- if not master.lite %}
+   output wire [4-1:0] {{ master.name }}_AXI_ARQOS,
+   output wire [C_{{ master.name }}_AXI_ARUSER_WIDTH-1:0] {{ master.name }}_AXI_ARUSER,
+{%- endif %}
+   output wire {{ master.name }}_AXI_ARVALID,
+   input  wire {{ master.name }}_AXI_ARREADY,
+   
+   // Master Interface Read Data 
+{%- if not master.lite %}
+   input  wire [C_{{ master.name }}_AXI_THREAD_ID_WIDTH-1:0] {{ master.name }}_AXI_RID,
+{%- endif %}
+   input  wire [C_{{ master.name }}_AXI_DATA_WIDTH-1:0] {{ master.name }}_AXI_RDATA,
+   input  wire [2-1:0] {{ master.name }}_AXI_RRESP,
+{%- if not master.lite %}
+   input  wire {{ master.name }}_AXI_RLAST,
+   input  wire [C_{{ master.name }}_AXI_RUSER_WIDTH-1:0]     {{ master.name }}_AXI_RUSER,
+{%- endif %}
+   input  wire {{ master.name }}_AXI_RVALID,
+   output wire {{ master.name }}_AXI_RREADY,
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+   // Clock and Reset
+   input  wire {{ slave.name }}_AXI_ACLK,
+   input  wire {{ slave.name }}_AXI_ARESETN,
+
+   // Slave Interface Write Address
+{%- if not slave.lite %}
+   input  wire [(C_{{ slave.name }}_AXI_ID_WIDTH-1):0] {{ slave.name }}_AXI_AWID,
+{%- endif %}
+   input  wire [(C_{{ slave.name }}_AXI_ADDR_WIDTH-1):0] {{ slave.name }}_AXI_AWADDR,
+{%- if not slave.lite %}
+   input  wire [7:0] {{ slave.name }}_AXI_AWLEN,
+   input  wire [2:0] {{ slave.name }}_AXI_AWSIZE,
+   input  wire [1:0] {{ slave.name }}_AXI_AWBURST,
+   input  wire [1:0] {{ slave.name }}_AXI_AWLOCK,
+   input  wire [3:0] {{ slave.name }}_AXI_AWCACHE,
+{%- endif %}
+   input  wire [2:0] {{ slave.name }}_AXI_AWPROT,
+{%- if not slave.lite %}
+   input  wire [3:0] {{ slave.name }}_AXI_AWQOS,
+   input  wire [C_{{ slave.name }}_AXI_AWUSER_WIDTH-1:0] {{ slave.name }}_AXI_AWUSER,
+{%- endif %}
+   input  wire {{ slave.name }}_AXI_AWVALID,
+   output wire {{ slave.name }}_AXI_AWREADY,
+
+   // Slave Interface Write Data
+{%- if not slave.lite %}
+   input  wire [C_{{ slave.name }}_AXI_ID_WIDTH-1:0] {{ slave.name }}_AXI_WID,
+{%- endif %}
+   input  wire [(C_{{ slave.name }}_AXI_DATA_WIDTH-1):0] {{ slave.name }}_AXI_WDATA,
+   input  wire [((C_{{ slave.name }}_AXI_DATA_WIDTH/8) -1):0] {{ slave.name }}_AXI_WSTRB,
+{%- if not slave.lite %}
+   input  wire {{ slave.name }}_AXI_WLAST,
+   input  wire [(C_{{ slave.name }}_AXI_WUSER_WIDTH-1):0] {{ slave.name }}_AXI_WUSER,
+{%- endif %}
+   input  wire {{ slave.name }}_AXI_WVALID,
+   output wire {{ slave.name }}_AXI_WREADY,
+
+   // Slave Interface Write Response
+{%- if not slave.lite %}
+   output wire [(C_{{ slave.name }}_AXI_ID_WIDTH-1):0] {{ slave.name }}_AXI_BID,
+{%- endif %}
+   output wire [1:0] {{ slave.name }}_AXI_BRESP,
+{%- if not slave.lite %}
+   output wire [(C_{{ slave.name }}_AXI_BUSER_WIDTH-1):0] {{ slave.name }}_AXI_BUSER,
+{%- endif %}
+   output wire {{ slave.name }}_AXI_BVALID,
+   input  wire {{ slave.name }}_AXI_BREADY,
+
+   // Slave Interface Read Address
+{%- if not slave.lite %}
+   input  wire [(C_{{ slave.name }}_AXI_ID_WIDTH-1):0] {{ slave.name }}_AXI_ARID,
+{%- endif %}
+   input  wire [(C_{{ slave.name }}_AXI_ADDR_WIDTH-1):0] {{ slave.name }}_AXI_ARADDR,
+{%- if not slave.lite %}
+   input  wire [7:0] {{ slave.name }}_AXI_ARLEN,
+   input  wire [2:0] {{ slave.name }}_AXI_ARSIZE,
+   input  wire [1:0] {{ slave.name }}_AXI_ARBURST,
+   input  wire [1:0] {{ slave.name }}_AXI_ARLOCK,
+   input  wire [3:0] {{ slave.name }}_AXI_ARCACHE,
+{%- endif %}
+   input  wire [2:0] {{ slave.name }}_AXI_ARPROT,
+{%- if not slave.lite %}
+   input  wire [3:0] {{ slave.name }}_AXI_ARQOS,
+   input  wire [(C_{{ slave.name }}_AXI_ARUSER_WIDTH-1):0] {{ slave.name }}_AXI_ARUSER,
+{%- endif %}
+   input  wire {{ slave.name }}_AXI_ARVALID,
+   output wire {{ slave.name }}_AXI_ARREADY,
+
+   // Slave Interface Read Data
+{%- if not slave.lite %}
+   output wire [(C_{{ slave.name }}_AXI_ID_WIDTH-1):0] {{ slave.name }}_AXI_RID,
+{%- endif %}
+   output wire [(C_{{ slave.name }}_AXI_DATA_WIDTH-1):0] {{ slave.name }}_AXI_RDATA,
+   output wire [1:0] {{ slave.name }}_AXI_RRESP,
+{%- if not slave.lite %}
+   output wire {{ slave.name }}_AXI_RLAST,
+   output wire [(C_{{ slave.name }}_AXI_RUSER_WIDTH-1):0] {{ slave.name }}_AXI_RUSER,
+{%- endif %}
+   output wire {{ slave.name }}_AXI_RVALID,
+   input  wire {{ slave.name }}_AXI_RREADY,
+{% endfor %}
+
+
+   //---------------------------------------------------------------------------
+   // User-defined I/O ports in Top-level User logic
+   //---------------------------------------------------------------------------
+{%- for ioport in def_top_ioports | sort() %}
+   {{ ioport }},
+{%- endfor %}
+
+
+   //----------------------------------------------------------------------------
+   // User-logic Clock and Reset
+   //----------------------------------------------------------------------------
+   input wire UCLK,
+   input wire URESETN
+   );
+
+
+  //---------------------------------------------------------------------------
+  // User-defined localparam in Top-level User logic
+  //---------------------------------------------------------------------------
+{%- for param in def_top_localparams %}
+  {{ param }}
+{%- endfor %}
+
+  //---------------------------------------------------------------------------
+  // User-logic Reset
+  //---------------------------------------------------------------------------
+  reg URST_r;
+  reg URST_rr;
+  reg URST;
+
+  always @(posedge UCLK) begin
+    URST_r <= !URESETN;  
+    URST_rr <= URST_r;
+    URST <= URST_rr;
+  end
+
+  //---------------------------------------------------------------------------
+  // AXI Reset
+  //---------------------------------------------------------------------------
+{%- for master in masterlist | sort(attribute='name') %}
+  reg {{ master.name }}_AXI_ARST_r;
+  reg {{ master.name }}_AXI_ARST_rr;
+  reg {{ master.name }}_AXI_ARST;
+
+  always @(posedge {{ master.name }}_AXI_ACLK) begin
+    {{ master.name }}_AXI_ARST_r <= !{{ master.name }}_AXI_ARESETN;  
+    {{ master.name }}_AXI_ARST_rr <= {{ master.name }}_AXI_ARST_r;
+    {{ master.name }}_AXI_ARST <= {{ master.name }}_AXI_ARST_rr;
+  end
+{% endfor %}
+
+{%- for slave in slavelist | sort(attribute='name') %}
+  reg {{ slave.name }}_AXI_ARST_r;
+  reg {{ slave.name }}_AXI_ARST_rr;
+  reg {{ slave.name }}_AXI_ARST;
+
+  always @(posedge {{ slave.name }}_AXI_ACLK) begin
+    {{ slave.name }}_AXI_ARST_r <= !{{ slave.name }}_AXI_ARESETN;  
+    {{ slave.name }}_AXI_ARST_rr <= {{ slave.name }}_AXI_ARST_r;
+    {{ slave.name }}_AXI_ARST <= {{ slave.name }}_AXI_ARST_rr;
+  end
+{% endfor %}
+
+  //---------------------------------------------------------------------------
+  // Userlogic <-> AXI Interface
+  //---------------------------------------------------------------------------
+{% for master in masterlist | sort(attribute='name') %}
+  // Master Interface Write Address
+  wire [C_{{ master.name }}_AXI_ADDR_WIDTH-1:0] {{ master.name }}_awaddr;
+  wire [8-1:0] {{ master.name }}_awlen;
+  wire {{ master.name }}_awvalid;
+  wire {{ master.name }}_awready;
+   
+  // Master Interface Write Data
+  wire [C_{{ master.name }}_AXI_DATA_WIDTH-1:0] {{ master.name }}_wdata;
+  wire [C_{{ master.name }}_AXI_DATA_WIDTH/8-1:0] {{ master.name }}_wstrb;
+  wire {{ master.name }}_wlast;
+  wire {{ master.name }}_wvalid;
+  wire {{ master.name }}_wready;
+   
+  // Master Interface Read Address
+  wire [C_{{ master.name }}_AXI_ADDR_WIDTH-1:0] {{ master.name }}_araddr;
+  wire [8-1:0] {{ master.name }}_arlen;
+  wire {{ master.name }}_arvalid;
+  wire {{ master.name }}_arready;
+   
+  // Master Interface Read Data 
+  wire [C_{{ master.name }}_AXI_DATA_WIDTH-1:0] {{ master.name }}_rdata;
+  wire {{ master.name }}_rlast;
+  wire {{ master.name }}_rvalid;
+  wire {{ master.name }}_rready;
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+  // Master Interface Write Address
+  wire [C_{{ slave.name }}_AXI_ADDR_WIDTH-1:0] {{ slave.name }}_awaddr;
+  wire [8-1:0] {{ slave.name }}_awlen;
+  wire {{ slave.name }}_awvalid;
+  wire {{ slave.name }}_awready;
+   
+  // Master Interface Write Data
+  wire [C_{{ slave.name }}_AXI_DATA_WIDTH-1:0] {{ slave.name }}_wdata;
+  wire [C_{{ slave.name }}_AXI_DATA_WIDTH/8-1:0] {{ slave.name }}_wstrb;
+  wire {{ slave.name }}_wlast;
+  wire {{ slave.name }}_wvalid;
+  wire {{ slave.name }}_wready;
+   
+  // Master Interface Read Address
+  wire [C_{{ slave.name }}_AXI_ADDR_WIDTH-1:0] {{ slave.name }}_araddr;
+  wire [8-1:0] {{ slave.name }}_arlen;
+  wire {{ slave.name }}_arvalid;
+  wire {{ slave.name }}_arready;
+   
+  // Master Interface Read Data 
+  wire [C_{{ slave.name }}_AXI_DATA_WIDTH-1:0] {{ slave.name }}_rdata;
+  wire {{ slave.name }}_rlast;
+  wire {{ slave.name }}_rvalid;
+  wire {{ slave.name }}_rready;
+{% endfor %}
+
+
+  //----------------------------------------------------------------------------
+  // User Logic
+  //----------------------------------------------------------------------------
+  {{ userlogic_name }}
+  inst_{{ userlogic_name }}
+    (
+{% for master in masterlist | sort(attribute='name') %}
+     .{{ master.name }}_ext_awaddr({{ master.name }}_awaddr),
+{%- if not master.lite %}
+     .{{ master.name }}_ext_awlen({{ master.name }}_awlen),
+{%- endif %}
+     .{{ master.name }}_ext_awvalid({{ master.name }}_awvalid),
+     .{{ master.name }}_ext_awready({{ master.name }}_awready),
+
+     .{{ master.name }}_ext_wdata({{ master.name }}_wdata),
+     .{{ master.name }}_ext_wstrb({{ master.name }}_wstrb),
+{%- if not master.lite %}
+     .{{ master.name }}_ext_wlast({{ master.name }}_wlast),
+{%- endif %}
+     .{{ master.name }}_ext_wvalid({{ master.name }}_wvalid),
+     .{{ master.name }}_ext_wready({{ master.name }}_wready),
+
+     .{{ master.name }}_ext_araddr({{ master.name }}_araddr),
+{%- if not master.lite %}
+     .{{ master.name }}_ext_arlen({{ master.name }}_arlen),
+{%- endif %}
+     .{{ master.name }}_ext_arvalid({{ master.name }}_arvalid),
+     .{{ master.name }}_ext_arready({{ master.name }}_arready),
+
+     .{{ master.name }}_ext_rdata({{ master.name }}_rdata),
+{%- if not master.lite %}
+     .{{ master.name }}_ext_rlast({{ master.name }}_rlast),
+{%- endif %}
+     .{{ master.name }}_ext_rvalid({{ master.name }}_rvalid),
+     .{{ master.name }}_ext_rready({{ master.name }}_rready),
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+     .{{ slave.name }}_ext_awaddr({{ slave.name }}_awaddr),
+{%- if not slave.lite %}
+     .{{ slave.name }}_ext_awlen({{ slave.name }}_awlen),
+{%- endif %}
+     .{{ slave.name }}_ext_awvalid({{ slave.name }}_awvalid),
+     .{{ slave.name }}_ext_awready({{ slave.name }}_awready),
+
+     .{{ slave.name }}_ext_wdata({{ slave.name }}_wdata),
+     .{{ slave.name }}_ext_wstrb({{ slave.name }}_wstrb),
+{%- if not slave.lite %}
+     .{{ slave.name }}_ext_wlast({{ slave.name }}_wlast),
+{%- endif %}
+     .{{ slave.name }}_ext_wvalid({{ slave.name }}_wvalid),
+     .{{ slave.name }}_ext_wready({{ slave.name }}_wready),
+
+     .{{ slave.name }}_ext_araddr({{ slave.name }}_araddr),
+{%- if not slave.lite %}
+     .{{ slave.name }}_ext_arlen({{ slave.name }}_arlen),
+{%- endif %}
+     .{{ slave.name }}_ext_arvalid({{ slave.name }}_arvalid),
+     .{{ slave.name }}_ext_arready({{ slave.name }}_arready),
+
+     .{{ slave.name }}_ext_rdata({{ slave.name }}_rdata),
+{%- if not slave.lite %}
+     .{{ slave.name }}_ext_rlast({{ slave.name }}_rlast),
+{%- endif %}
+     .{{ slave.name }}_ext_rvalid({{ slave.name }}_rvalid),
+     .{{ slave.name }}_ext_rready({{ slave.name }}_rready),
+{% endfor %}
+
+{%- for ioport in name_top_ioports | sort() %}
+     .{{ ioport }}({{ ioport }}),
+{%- endfor %}
+
+     .CLK(UCLK), // User-logic clock
+     .RST(URST) // User-logic reset
+     );
+
+  //------------------------------------------------------------------------------
+  // AXI Interface
+  //------------------------------------------------------------------------------
+{% for master in masterlist | sort(attribute='name') %}
+{%- if not master.lite %}
+  axi_master_interface #
+{%- else %}
+  axi_lite_slave_interface #
+{%- endif %}
+   (
+    .C_M_AXI_ADDR_WIDTH(C_{{ master.name }}_AXI_ADDR_WIDTH),
+    .C_M_AXI_DATA_WIDTH(C_{{ master.name }}_AXI_DATA_WIDTH),
+{%- if not master.lite %}
+    .C_M_AXI_THREAD_ID_WIDTH(C_{{ master.name }}_AXI_THREAD_ID_WIDTH),
+    .C_M_AXI_AWUSER_WIDTH(C_{{ master.name }}_AXI_AWUSER_WIDTH),
+    .C_M_AXI_ARUSER_WIDTH(C_{{ master.name }}_AXI_ARUSER_WIDTH),
+    .C_M_AXI_WUSER_WIDTH(C_{{ master.name }}_AXI_WUSER_WIDTH),
+    .C_M_AXI_RUSER_WIDTH(C_{{ master.name }}_AXI_RUSER_WIDTH),
+    .C_M_AXI_BUSER_WIDTH(C_{{ master.name }}_AXI_BUSER_WIDTH),
+    .C_M_AXI_SUPPORTS_WRITE(C_{{ master.name }}_AXI_SUPPORTS_WRITE),
+    .C_M_AXI_SUPPORTS_READ(C_{{ master.name }}_AXI_SUPPORTS_READ),
+{%- endif %}
+    .C_M_AXI_TARGET(C_M_AXI_TARGET)
+   )
+{%- if not master.lite %}
+  inst_axi_master_interface_{{ master.name }}
+{%- else %}
+  inst_axi_lite_master_interface_{{ master.name }}
+{%- endif %}
+    (
+     .ACLK({{ master.name }}_AXI_ACLK), // AXI clock
+     .ARESETN({{ master.name }}_AXI_ARESETN), // AXI reset
+
+     .awaddr({{ master.name }}_awaddr),
+{%- if not master.lite %}
+     .awlen({{ master.name }}_awlen),
+{%- endif %}
+     .awvalid({{ master.name }}_awvalid),
+     .awready({{ master.name }}_awready),
+
+     .wdata({{ master.name }}_wdata),
+     .wstrb({{ master.name }}_wstrb),
+{%- if not master.lite %}
+     .wlast({{ master.name }}_wlast),
+{%- endif %}
+     .wvalid({{ master.name }}_wvalid),
+     .wready({{ master.name }}_wready),
+
+     .araddr({{ master.name }}_araddr),
+{%- if not master.lite %}
+     .arlen({{ master.name }}_arlen),
+{%- endif %}
+     .arvalid({{ master.name }}_arvalid),
+     .arready({{ master.name }}_arready),
+
+     .rdata({{ master.name }}_rdata),
+{%- if not master.lite %}
+     .rlast({{ master.name }}_rlast),
+{%- endif %}
+     .rvalid({{ master.name }}_rvalid),
+     .rready({{ master.name }}_rready),
+
+{%- if not master.lite %}
+     .M_AXI_AWID({{ master.name }}_AXI_AWID),
+{%- endif %}
+     .M_AXI_AWADDR({{ master.name }}_AXI_AWADDR),
+{%- if not master.lite %}
+     .M_AXI_AWLEN({{ master.name }}_AXI_AWLEN),
+     .M_AXI_AWSIZE({{ master.name }}_AXI_AWSIZE),
+     .M_AXI_AWBURST({{ master.name }}_AXI_AWBURST),
+     .M_AXI_AWLOCK({{ master.name }}_AXI_AWLOCK),
+     .M_AXI_AWCACHE({{ master.name }}_AXI_AWCACHE),
+{%- endif %}
+     .M_AXI_AWPROT({{ master.name }}_AXI_AWPROT),
+{%- if not master.lite %}
+     .M_AXI_AWQOS({{ master.name }}_AXI_AWQOS),
+     .M_AXI_AWUSER({{ master.name }}_AXI_AWUSER),
+{%- endif %}
+     .M_AXI_AWVALID({{ master.name }}_AXI_AWVALID),
+     .M_AXI_AWREADY({{ master.name }}_AXI_AWREADY),
+
+     .M_AXI_WDATA({{ master.name }}_AXI_WDATA),
+     .M_AXI_WSTRB({{ master.name }}_AXI_WSTRB),
+{%- if not master.lite %}
+     .M_AXI_WLAST({{ master.name }}_AXI_WLAST),
+     .M_AXI_WUSER({{ master.name }}_AXI_WUSER),
+{%- endif %}
+     .M_AXI_WVALID({{ master.name }}_AXI_WVALID),
+     .M_AXI_WREADY({{ master.name }}_AXI_WREADY),
+
+{%- if not master.lite %}
+     .M_AXI_BID({{ master.name }}_AXI_BID),
+{%- endif %}
+     .M_AXI_BRESP({{ master.name }}_AXI_BRESP),
+{%- if not master.lite %}
+     .M_AXI_BUSER({{ master.name }}_AXI_BUSER),
+{%- endif %}
+     .M_AXI_BVALID({{ master.name }}_AXI_BVALID),
+     .M_AXI_BREADY({{ master.name }}_AXI_BREADY),
+
+{%- if not master.lite %}
+     .M_AXI_ARID({{ master.name }}_AXI_ARID),
+{%- endif %}
+     .M_AXI_ARADDR({{ master.name }}_AXI_ARADDR),
+{%- if not master.lite %}
+     .M_AXI_ARLEN({{ master.name }}_AXI_ARLEN),
+     .M_AXI_ARSIZE({{ master.name }}_AXI_ARSIZE),
+     .M_AXI_ARBURST({{ master.name }}_AXI_ARBURST),
+     .M_AXI_ARLOCK({{ master.name }}_AXI_ARLOCK),
+     .M_AXI_ARCACHE({{ master.name }}_AXI_ARCACHE),
+{%- endif %}
+     .M_AXI_ARPROT({{ master.name }}_AXI_ARPROT),
+{%- if not master.lite %}
+     .M_AXI_ARQOS({{ master.name }}_AXI_ARQOS),
+     .M_AXI_ARUSER({{ master.name }}_AXI_ARUSER),
+{%- endif %}
+     .M_AXI_ARVALID({{ master.name }}_AXI_ARVALID),
+     .M_AXI_ARREADY({{ master.name }}_AXI_ARREADY),
+
+{%- if not master.lite %}
+     .M_AXI_RID({{ master.name }}_AXI_RID),
+{%- endif %}
+     .M_AXI_RDATA({{ master.name }}_AXI_RDATA),
+     .M_AXI_RRESP({{ master.name }}_AXI_RRESP),
+{%- if not master.lite %}
+     .M_AXI_RLAST({{ master.name }}_AXI_RLAST),
+     .M_AXI_RUSER({{ master.name }}_AXI_RUSER),
+{%- endif %}
+     .M_AXI_RVALID({{ master.name }}_AXI_RVALID),
+     .M_AXI_RREADY({{ master.name }}_AXI_RREADY)
+     );
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+{%- if not slave.lite %}
+  axi_slave_interface #
+{%- else %}
+  axi_lite_slave_interface #
+{%- endif %}
+   (
+{%- if not slave.lite %}
+    .C_S_AXI_ID_WIDTH(C_{{ slave.name }}_AXI_ID_WIDTH),
+    .C_S_AXI_AWUSER_WIDTH(C_{{ slave.name }}_AXI_AWUSER_WIDTH),
+    .C_S_AXI_ARUSER_WIDTH(C_{{ slave.name }}_AXI_ARUSER_WIDTH),
+    .C_S_AXI_WUSER_WIDTH(C_{{ slave.name }}_AXI_WUSER_WIDTH),
+    .C_S_AXI_RUSER_WIDTH(C_{{ slave.name }}_AXI_RUSER_WIDTH),
+    .C_S_AXI_BUSER_WIDTH(C_{{ slave.name }}_AXI_BUSER_WIDTH),
+{%- endif %}
+    .C_S_AXI_ADDR_WIDTH(C_{{ slave.name }}_AXI_ADDR_WIDTH),
+    .C_S_AXI_DATA_WIDTH(C_{{ slave.name }}_AXI_DATA_WIDTH)
+   )
+{%- if not slave.lite %}
+  inst_axi_slave_interface_{{ slave.name }}
+{%- else %}
+  inst_axi_lite_slave_interface_{{ slave.name }}
+{%- endif %}
+    (
+     .ACLK({{ slave.name }}_AXI_ACLK), // AXI clock
+     .ARESETN({{ slave.name }}_AXI_ARESETN), // AXI reset
+
+     .awaddr({{ slave.name }}_awaddr),
+{%- if not slave.lite %}
+     .awlen({{ slave.name }}_awlen),
+{%- endif %}
+     .awvalid({{ slave.name }}_awvalid),
+     .awready({{ slave.name }}_awready),
+
+     .wdata({{ slave.name }}_wdata),
+     .wstrb({{ slave.name }}_wstrb),
+{%- if not slave.lite %}
+     .wlast({{ slave.name }}_wlast),
+{%- endif %}
+     .wvalid({{ slave.name }}_wvalid),
+     .wready({{ slave.name }}_wready),
+
+     .araddr({{ slave.name }}_araddr),
+{%- if not slave.lite %}
+     .arlen({{ slave.name }}_arlen),
+{%- endif %}
+     .arvalid({{ slave.name }}_arvalid),
+     .arready({{ slave.name }}_arready),
+
+     .rdata({{ slave.name }}_rdata),
+{%- if not slave.lite %}
+     .rlast({{ slave.name }}_rlast),
+{%- endif %}
+     .rvalid({{ slave.name }}_rvalid),
+     .rready({{ slave.name }}_rready),
+
+{% if not slave.lite %}
+     .S_AXI_AWID({{ slave.name }}_AXI_AWID),
+{%- endif %}
+     .S_AXI_AWADDR({{ slave.name }}_AXI_AWADDR),
+{%- if not slave.lite %}
+     .S_AXI_AWLEN({{ slave.name }}_AXI_AWLEN),
+     .S_AXI_AWSIZE({{ slave.name }}_AXI_AWSIZE),
+     .S_AXI_AWBURST({{ slave.name }}_AXI_AWBURST),
+     .S_AXI_AWLOCK({{ slave.name }}_AXI_AWLOCK),
+     .S_AXI_AWCACHE({{ slave.name }}_AXI_AWCACHE),
+{%- endif %}
+     .S_AXI_AWPROT({{ slave.name }}_AXI_AWPROT),
+{%- if not slave.lite %}
+     .S_AXI_AWQOS({{ slave.name }}_AXI_AWQOS),
+     .S_AXI_AWUSER({{ slave.name }}_AXI_AWUSER),
+{%- endif %}
+     .S_AXI_AWVALID({{ slave.name }}_AXI_AWVALID),
+     .S_AXI_AWREADY({{ slave.name }}_AXI_AWREADY),
+
+{% if not slave.lite %}
+     .S_AXI_WID({{ slave.name }}_AXI_WID),
+{%- endif %}
+     .S_AXI_WDATA({{ slave.name }}_AXI_WDATA),
+     .S_AXI_WSTRB({{ slave.name }}_AXI_WSTRB),
+{%- if not slave.lite %}
+     .S_AXI_WLAST({{ slave.name }}_AXI_WLAST),
+     .S_AXI_WUSER({{ slave.name }}_AXI_WUSER),
+{%- endif %}
+     .S_AXI_WVALID({{ slave.name }}_AXI_WVALID),
+     .S_AXI_WREADY({{ slave.name }}_AXI_WREADY),
+
+{% if not slave.lite %}
+     .S_AXI_BID({{ slave.name }}_AXI_BID),
+{%- endif %}
+     .S_AXI_BRESP({{ slave.name }}_AXI_BRESP),
+{%- if not slave.lite %}
+     .S_AXI_BUSER({{ slave.name }}_AXI_BUSER),
+{%- endif %}
+     .S_AXI_BVALID({{ slave.name }}_AXI_BVALID),
+     .S_AXI_BREADY({{ slave.name }}_AXI_BREADY),
+
+{% if not slave.lite %}
+     .S_AXI_ARID({{ slave.name }}_AXI_ARID),
+{%- endif %}
+     .S_AXI_ARADDR({{ slave.name }}_AXI_ARADDR),
+{%- if not slave.lite %}
+     .S_AXI_ARLEN({{ slave.name }}_AXI_ARLEN),
+     .S_AXI_ARSIZE({{ slave.name }}_AXI_ARSIZE),
+     .S_AXI_ARBURST({{ slave.name }}_AXI_ARBURST),
+     .S_AXI_ARLOCK({{ slave.name }}_AXI_ARLOCK),
+     .S_AXI_ARCACHE({{ slave.name }}_AXI_ARCACHE),
+{%- endif %}
+     .S_AXI_ARPROT({{ slave.name }}_AXI_ARPROT),
+{%- if not slave.lite %}
+     .S_AXI_ARQOS({{ slave.name }}_AXI_ARQOS),
+     .S_AXI_ARUSER({{ slave.name }}_AXI_ARUSER),
+{%- endif %}
+     .S_AXI_ARVALID({{ slave.name }}_AXI_ARVALID),
+     .S_AXI_ARREADY({{ slave.name }}_AXI_ARREADY),
+
+{% if not slave.lite %}
+     .S_AXI_RID({{ slave.name }}_AXI_RID),
+{%- endif %}
+     .S_AXI_RDATA({{ slave.name }}_AXI_RDATA),
+     .S_AXI_RRESP({{ slave.name }}_AXI_RRESP),
+{%- if not slave.lite %}
+     .S_AXI_RLAST({{ slave.name }}_AXI_RLAST),
+     .S_AXI_RUSER({{ slave.name }}_AXI_RUSER),
+{%- endif %}
+     .S_AXI_RVALID({{ slave.name }}_AXI_RVALID),
+     .S_AXI_RREADY({{ slave.name }}_AXI_RREADY)
+     );
+{% endfor %}
+
+endmodule
+

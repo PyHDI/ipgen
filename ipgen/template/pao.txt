@@ -1,0 +1,2 @@
+
+lib ipgen_{{ userlogic_name }}{{ ipcore_version }} {{ hdlname }} verilog

@@ -1,0 +1,443 @@
+module ipgen_{{ userlogic_name.lower() }} #
+  (
+   //---------------------------------------------------------------------------
+   // User-defined parameter in Top-level User logic
+   // DO NOT modify. They are NOT passed through to the instance
+   //---------------------------------------------------------------------------
+{%- for param in def_top_parameters %}
+   {{ param }}
+{%- endfor %}
+
+   //----------------------------------------------------------------------------
+   // Avalon Parameter
+   //----------------------------------------------------------------------------
+{% for master in masterlist | sort(attribute='name') %}
+   // Master {{ master.name }}
+   parameter integer C_AVM_{{ master.name }}_DATA_WIDTH = {{ master.datawidth }},
+   parameter integer C_AVM_{{ master.name }}_ADDR_WIDTH = {{ ext_addrwidth }},
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+   // Control Thread I/O channel {{ slave.name }}
+   parameter integer C_AVS_{{ slave.name }}_DATA_WIDTH = {{ slave.datawidth }},
+   parameter integer C_AVS_{{ slave.name }}_ADDR_WIDTH = {{ slave.addrwidth }},
+{% endfor %}
+
+   // Base address of targeted slave DRAM
+   parameter C_AVM_TARGET = 'h00000000
+   )
+  (
+   //----------------------------------------------------------------------------
+   // Avalon Interface
+   //----------------------------------------------------------------------------
+{% for master in masterlist | sort(attribute='name') %}
+{%- if not single_clock %}
+   // Clock and Reset
+   input  wire csi_sys_{{ master.name }}_clk,
+   input  wire csi_sys_{{ master.name }}_reset_n,
+{%- endif %}
+
+   // Common
+   output wire [C_AVM_{{ master.name }}_ADDR_WIDTH-1:0] avm_{{ master.name }}_address,
+   input  wire avm_{{ master.name }}_waitrequest,
+   output wire [C_AVM_{{ master.name }}_DATA_WIDTH/8-1:0] avm_{{ master.name }}_byteenable,
+{%- if not master.lite %}
+   output wire [8:0] avm_{{ master.name }}_burstcount,
+{%- endif %}
+
+   // Read
+   output wire avm_{{ master.name }}_read,
+   input  wire [C_AVM_{{ master.name }}_DATA_WIDTH-1:0] avm_{{ master.name }}_readdata,
+   input  wire avm_{{ master.name }}_readdatavalid,
+
+   // Write
+   output wire avm_{{ master.name }}_write,
+   output wire [C_AVM_{{ master.name }}_DATA_WIDTH-1:0] avm_{{ master.name }}_writedata,
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+{%- if not single_clock %}
+   // Clock and Reset
+   input  wire csi_sys_{{ slave.name }}_clk,
+   input  wire csi_sys_{{ slave.name }}_reset_n,
+{%- endif %}
+
+   // Common
+   input  wire [C_AVS_{{ slave.name }}_ADDR_WIDTH-1:0] avs_{{ slave.name }}_address,
+   output wire avs_{{ slave.name }}_waitrequest,
+   input  wire [C_AVS_{{ slave.name }}_DATA_WIDTH/8-1:0] avs_{{ slave.name }}_byteenable,
+{%- if not slave.lite %}
+   input  wire [8:0] avs_{{ slave.name }}_burstcount,
+{%- endif %}
+   
+   // Read
+   input  wire avs_{{ slave.name }}_read,
+   output wire [C_AVS_{{ slave.name }}_DATA_WIDTH-1:0] avs_{{ slave.name }}_readdata,
+   output wire avs_{{ slave.name }}_readdatavalid,
+
+   // Write
+   input  wire avs_{{ slave.name }}_write,
+   input  wire [C_AVS_{{ slave.name }}_DATA_WIDTH-1:0] avs_{{ slave.name }}_writedata,
+{% endfor %}
+
+   //---------------------------------------------------------------------------
+   // User-defined I/O ports in Top-level User logic
+   //---------------------------------------------------------------------------
+{%- for ioport in def_top_ioports | sort() %}
+   {{ ioport }},
+{%- endfor %}
+
+   //----------------------------------------------------------------------------
+   // User-logic Clock and Reset
+   //----------------------------------------------------------------------------
+   input wire csi_sys_user_clk,
+   input wire csi_sys_user_reset_n
+   );
+
+
+  //---------------------------------------------------------------------------
+  // User-defined localparam in Top-level User logic
+  //---------------------------------------------------------------------------
+{%- for param in def_top_localparams %}
+  {{ param }}
+{%- endfor %}
+
+  //---------------------------------------------------------------------------
+  // User-logic Reset
+  //---------------------------------------------------------------------------
+  reg user_reset_r;
+  reg user_reset_rr;
+  reg user_reset;
+
+  always @(posedge csi_sys_user_clk) begin
+    user_reset_r <= !csi_sys_user_reset_n;  
+    user_reset_rr <= user_reset_r;
+    user_reset <= user_reset_rr;
+  end
+
+  //---------------------------------------------------------------------------
+  // Avalon Reset
+  //---------------------------------------------------------------------------
+{%- for master in masterlist | sort(attribute='name') %}
+{%- if not single_clock %}
+  reg {{ master.name }}_AVM_ARST_r;
+  reg {{ master.name }}_AVM_ARST_rr;
+  reg {{ master.name }}_AVM_ARST;
+
+  always @(posedge csi_sys_{{ master.name }}_clk) begin
+    {{ master.name }}_AVM_ARST_r <= !csi_sys_{{ master.name }}_reset_n;  
+    {{ master.name }}_AVM_ARST_rr <= {{ master.name }}_AVM_ARST_r;
+    {{ master.name }}_AVM_ARST <= {{ master.name }}_AVM_ARST_rr;
+  end
+{%- else %}
+  wire csi_sys_{{ master.name }}_clk;
+  assign csi_sys_{{ master.name }}_clk = csi_sys_user_clk;
+  wire csi_sys_{{ master.name }}_reset_n;
+  assign csi_sys_{{ master.name }}_reset_n = csi_sys_user_reset_n;
+  wire {{ master.name }}_AVM_ARST;
+  assign {{ master.name }}_AVM_ARST = user_reset;
+{%- endif %}
+{% endfor %}
+
+{%- for slave in slavelist | sort(attribute='name') %}
+{%- if not single_clock %}
+  reg {{ slave.name }}_AVS_ARST_r;
+  reg {{ slave.name }}_AVS_ARST_rr;
+  reg {{ slave.name }}_AVS_ARST;
+
+  always @(posedge csi_sys_{{ slave.name }}_clk) begin
+    {{ slave.name }}_AVS_ARST_r <= !csi_sys_{{ slave.name }}_reset_n;  
+    {{ slave.name }}_AVS_ARST_rr <= {{ slave.name }}_AVS_ARST_r;
+    {{ slave.name }}_AVS_ARST <= {{ slave.name }}_AVS_ARST_rr;
+  end
+{%- else %}
+  wire csi_sys_{{ slave.name }}_clk;
+  assign csi_sys_{{ slave.name }}_clk = csi_sys_user_clk;
+  wire csi_sys_{{ slave.name }}_reset_n;
+  assign csi_sys_{{ slave.name }}_reset_n = csi_sys_user_reset_n;
+  wire {{ slave.name }}_AVM_ARST;
+  assign {{ slave.name }}_AVM_ARST = user_reset;
+{%- endif %}
+{% endfor %}
+
+  //---------------------------------------------------------------------------
+  // Userlogic <-> Avalon Interface
+  //---------------------------------------------------------------------------
+{% for master in masterlist | sort(attribute='name') %}
+  // Master Interface Write Address
+  wire [C_AVM_{{ master.name }}_ADDR_WIDTH-1:0] {{ master.name }}_awaddr;
+{%- if not master.lite %}
+  wire [8-1:0] {{ master.name }}_awlen;
+{%- endif %}
+  wire {{ master.name }}_awvalid;
+  wire {{ master.name }}_awready;
+   
+  // Master Interface Write Data
+  wire [C_AVM_{{ master.name }}_DATA_WIDTH-1:0] {{ master.name }}_wdata;
+  wire [(C_AVM_{{ master.name }}_DATA_WIDTH/8)-1:0] {{ master.name }}_wstrb;
+{%- if not master.lite %}
+  wire {{ master.name }}_wlast;
+{%- endif %}
+  wire {{ master.name }}_wvalid;
+  wire {{ master.name }}_wready;
+   
+  // Master Interface Read Address
+  wire [C_AVM_{{ master.name }}_ADDR_WIDTH-1:0] {{ master.name }}_araddr;
+{%- if not master.lite %}
+  wire [8-1:0] {{ master.name }}_arlen;
+{%- endif %}
+  wire {{ master.name }}_arvalid;
+  wire {{ master.name }}_arready;
+   
+  // Master Interface Read Data 
+  wire [C_AVM_{{ master.name }}_DATA_WIDTH-1:0] {{ master.name }}_rdata;
+{%- if not master.lite %}
+  wire {{ master.name }}_rlast;
+{%- endif %}
+  wire {{ master.name }}_rvalid;
+  wire {{ master.name }}_rready;
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+  // Slave Interface Write Address
+  wire [C_AVS_{{ slave.name }}_ADDR_WIDTH-1:0] {{ slave.name }}_awaddr;
+{%- if not slave.lite %}
+  wire [8-1:0] {{ slave.name }}_awlen;
+{%- endif %}
+  wire {{ slave.name }}_awvalid;
+  wire {{ slave.name }}_awready;
+   
+  // Slave Interface Write Data
+  wire [C_AVS_{{ slave.name }}_DATA_WIDTH-1:0] {{ slave.name }}_wdata;
+  wire [(C_AVS_{{ slave.name }}_DATA_WIDTH/8)-1:0] {{ slave.name }}_wstrb;
+{%- if not slave.lite %}
+  wire {{ slave.name }}_wlast;
+{%- endif %}
+  wire {{ slave.name }}_wvalid;
+  wire {{ slave.name }}_wready;
+   
+  // Slave Interface Read Address
+  wire [C_AVS_{{ slave.name }}_ADDR_WIDTH-1:0] {{ slave.name }}_araddr;
+{%- if not slave.lite %}
+  wire [8-1:0] {{ slave.name }}_arlen;
+{%- endif %}
+  wire {{ slave.name }}_arvalid;
+  wire {{ slave.name }}_arready;
+   
+  // Slave Interface Read Data 
+  wire [C_AVS_{{ slave.name }}_DATA_WIDTH-1:0] {{ slave.name }}_rdata;
+{%- if not slave.lite %}
+  wire {{ slave.name }}_rlast;
+{%- endif %}
+  wire {{ slave.name }}_rvalid;
+  wire {{ slave.name }}_rready;
+{% endfor %}
+
+  //----------------------------------------------------------------------------
+  // User Logic
+  //----------------------------------------------------------------------------
+  {{ userlogic_name }}
+  inst_{{ userlogic_name }}
+    (
+{% for master in masterlist | sort(attribute='name') %}
+     .{{ master.name }}_ext_awaddr({{ master.name }}_awaddr),
+{%- if not master.lite %}
+     .{{ master.name }}_ext_awlen({{ master.name }}_awlen),
+{%- endif %}
+     .{{ master.name }}_ext_awvalid({{ master.name }}_awvalid),
+     .{{ master.name }}_ext_awready({{ master.name }}_awready),
+
+     .{{ master.name }}_ext_wdata({{ master.name }}_wdata),
+     .{{ master.name }}_ext_wstrb({{ master.name }}_wstrb),
+{%- if not master.lite %}
+     .{{ master.name }}_ext_wlast({{ master.name }}_wlast),
+{%- endif %}
+     .{{ master.name }}_ext_wvalid({{ master.name }}_wvalid),
+     .{{ master.name }}_ext_wready({{ master.name }}_wready),
+
+     .{{ master.name }}_ext_araddr({{ master.name }}_araddr),
+{%- if not master.lite %}
+     .{{ master.name }}_ext_arlen({{ master.name }}_arlen),
+{%- endif %}
+     .{{ master.name }}_ext_arvalid({{ master.name }}_arvalid),
+     .{{ master.name }}_ext_arready({{ master.name }}_arready),
+
+     .{{ master.name }}_ext_rdata({{ master.name }}_rdata),
+{%- if not master.lite %}
+     .{{ master.name }}_ext_rlast({{ master.name }}_rlast),
+{%- endif %}
+     .{{ master.name }}_ext_rvalid({{ master.name }}_rvalid),
+     .{{ master.name }}_ext_rready({{ master.name }}_rready),
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+     .{{ slave.name }}_ext_awaddr({{ slave.name }}_awaddr),
+{%- if not slave.lite %}
+     .{{ slave.name }}_ext_awlen({{ slave.name }}_awlen),
+{%- endif %}
+     .{{ slave.name }}_ext_awvalid({{ slave.name }}_awvalid),
+     .{{ slave.name }}_ext_awready({{ slave.name }}_awready),
+
+     .{{ slave.name }}_ext_wdata({{ slave.name }}_wdata),
+     .{{ slave.name }}_ext_wstrb({{ slave.name }}_wstrb),
+{%- if not slave.lite %}
+     .{{ slave.name }}_ext_wlast({{ slave.name }}_wlast),
+{%- endif %}
+     .{{ slave.name }}_ext_wvalid({{ slave.name }}_wvalid),
+     .{{ slave.name }}_ext_wready({{ slave.name }}_wready),
+
+     .{{ slave.name }}_ext_araddr({{ slave.name }}_araddr),
+{%- if not slave.lite %}
+     .{{ slave.name }}_ext_arlen({{ slave.name }}_arlen),
+{%- endif %}
+     .{{ slave.name }}_ext_arvalid({{ slave.name }}_arvalid),
+     .{{ slave.name }}_ext_arready({{ slave.name }}_arready),
+
+     .{{ slave.name }}_ext_rdata({{ slave.name }}_rdata),
+{%- if not slave.lite %}
+     .{{ slave.name }}_ext_rlast({{ slave.name }}_rlast),
+{%- endif %}
+     .{{ slave.name }}_ext_rvalid({{ slave.name }}_rvalid),
+     .{{ slave.name }}_ext_rready({{ slave.name }}_rready),
+{% endfor %}
+    
+{%- for ioport in name_top_ioports | sort() %}
+     .{{ ioport }}(coe_{{ ioport }}),
+{%- endfor %}
+
+     .CLK(csi_sys_user_clk), // User-logic clock
+     .RST(user_reset) // User-logic reset
+     );
+
+  //------------------------------------------------------------------------------
+  // Avalon Interface
+  //------------------------------------------------------------------------------
+{% for master in masterlist | sort(attribute='name') %}
+{%- if not master.lite %}
+  avalon_master_interface #
+{%- else %}
+  avalon_lite_master_interface #
+{%- endif %}
+   (
+    .C_AVM_ADDR_WIDTH(C_AVM_{{ master.name }}_ADDR_WIDTH),
+    .C_AVM_DATA_WIDTH(C_AVM_{{ master.name }}_DATA_WIDTH),
+    .C_AVM_TARGET(C_AVM_TARGET)
+   )
+{%- if not master.lite %}
+  inst_avalon_master_interface_{{ master.name }}
+{%- else %}
+  inst_avalon_lite_master_interface_{{ master.name }}
+{%- endif %}
+    (
+     .ACLK(csi_sys_{{ master.name }}_clk), // Avalon clock
+     .ARESETN(csi_sys_{{ master.name }}_reset_n), // Avalon reset
+
+     .awaddr({{ master.name }}_awaddr),
+{%- if not master.lite %}
+     .awlen({{ master.name }}_awlen),
+{%- endif %}
+     .awvalid({{ master.name }}_awvalid),
+     .awready({{ master.name }}_awready),
+
+     .wdata({{ master.name }}_wdata),
+     .wstrb({{ master.name }}_wstrb),
+{%- if not master.lite %}
+     .wlast({{ master.name }}_wlast),
+{%- endif %}
+     .wvalid({{ master.name }}_wvalid),
+     .wready({{ master.name }}_wready),
+
+     .araddr({{ master.name }}_araddr),
+{%- if not master.lite %}
+     .arlen({{ master.name }}_arlen),
+{%- endif %}
+     .arvalid({{ master.name }}_arvalid),
+     .arready({{ master.name }}_arready),
+
+     .rdata({{ master.name }}_rdata),
+{%- if not master.lite %}
+     .rlast({{ master.name }}_rlast),
+{%- endif %}
+     .rvalid({{ master.name }}_rvalid),
+     .rready({{ master.name }}_rready),
+
+     .avm_address(avm_{{ master.name }}_address),
+     .avm_waitrequest(avm_{{ master.name }}_waitrequest),
+     .avm_byteenable(avm_{{ master.name }}_byteenable),
+{%- if not master.lite %}
+     .avm_burstcount(avm_{{ master.name }}_burstcount),
+{%- endif %}
+
+     .avm_read(avm_{{ master.name }}_read),
+     .avm_readdata(avm_{{ master.name }}_readdata),
+     .avm_readdatavalid(avm_{{ master.name }}_readdatavalid),
+
+     .avm_write(avm_{{ master.name }}_write),
+     .avm_writedata(avm_{{ master.name }}_writedata)
+     );
+{% endfor %}
+
+{% for slave in slavelist | sort(attribute='name') %}
+{%- if not slave.lite %}
+  avalon_slave_interface #
+{%- else %}
+  avalon_lite_slave_interface #
+{%- endif %}
+   (
+    .C_AVS_ADDR_WIDTH(C_AVS_{{ slave.name }}_ADDR_WIDTH),
+    .C_AVS_DATA_WIDTH(C_AVS_{{ slave.name }}_DATA_WIDTH)
+   )
+{%- if not slave.lite %}
+  inst_avalon_slave_interface_{{ slave.name }}
+{%- else %}
+  inst_avalon_lite_slave_interface_{{ slave.name }}
+{%- endif %}
+    (
+     .ACLK(csi_sys_{{ slave.name }}_clk), // Avalon clock
+     .ARESETN(csi_sys_{{ slave.name }}_reset_n), // Avalon reset
+
+     .awaddr({{ slave.name }}_awaddr),
+{%- if not slave.lite %}
+     .awlen({{ slave.name }}_awlen),
+{%- endif %}
+     .awvalid({{ slave.name }}_awvalid),
+     .awready({{ slave.name }}_awready),
+
+     .wdata({{ slave.name }}_wdata),
+     .wstrb({{ slave.name }}_wstrb),
+{%- if not slave.lite %}
+     .wlast({{ slave.name }}_wlast),
+{%- endif %}
+     .wvalid({{ slave.name }}_wvalid),
+     .wready({{ slave.name }}_wready),
+
+     .araddr({{ slave.name }}_araddr),
+{%- if not slave.lite %}
+     .arlen({{ slave.name }}_arlen),
+{%- endif %}
+     .arvalid({{ slave.name }}_arvalid),
+     .arready({{ slave.name }}_arready),
+
+     .rdata({{ slave.name }}_rdata),
+{%- if not slave.lite %}
+     .rlast({{ slave.name }}_rlast),
+{%- endif %}
+     .rvalid({{ slave.name }}_rvalid),
+     .rready({{ slave.name }}_rready),
+
+     .avs_address(avs_{{ slave.name }}_address << {{ log2(slave.datawidth/8) }}),
+     .avs_waitrequest(avs_{{ slave.name }}_waitrequest),
+     .avs_byteenable(avs_{{ slave.name }}_byteenable),
+{%- if not slave.lite %}
+     .avs_burstcount(avs_{{ slave.name }}_burstcount),
+{%- endif %}
+     .avs_read(avs_{{ slave.name }}_read),
+     .avs_readdata(avs_{{ slave.name }}_readdata),
+     .avs_readdatavalid(avs_{{ slave.name }}_readdatavalid),
+     .avs_write(avs_{{ slave.name }}_write),
+     .avs_writedata(avs_{{ slave.name }}_writedata)
+     );
+{% endfor %}
+
+endmodule
+

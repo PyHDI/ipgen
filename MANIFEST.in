@@ -1,0 +1,11 @@
+include README.md
+include README.rst
+include LICENSE.txt
+include Makefile
+include default.config
+include base.mk
+include mem-incr.hex
+recursive-include include *
+recursive-include c_lib *
+recursive-include examples *
+recursive-include tests *
