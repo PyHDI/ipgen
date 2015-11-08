@@ -80,7 +80,8 @@ You can use the ipgen command from your console.
 
     ipgen
 
-You can find the sample projects in 'tests/memcpy.v'.
+You can find the sample projects in 'tests'. Now let's see
+'tests/memcpy'. There is an input source code.
 
 -  userlogic.v : User-defined Verilog code using IPgen abstract memory
    interfaces
