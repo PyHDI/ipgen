@@ -4,7 +4,7 @@ import ipgen.utils.version
 import re
 import os
 
-m = re.search(r'(\d+\.\d+\.\d+)', ipgen.utils.version.VERSION)
+m = re.search(r'(\d+\.\d+\.\d+(-.+)?)', ipgen.utils.version.VERSION)
 version = m.group(1) if m is not None else '0.0.0'
 
 def read(filename):
@@ -24,12 +24,12 @@ setup(name='ipgen',
       url='https://github.com/PyHDI/ipgen',
       packages=find_packages(),
       package_data={ 'ipgen.template' : ['*.*'], },
-      install_requires=[ 'pyverilog', 'Jinja2' ],
+      install_requires=[ 'pyverilog>=1.0.4', 'Jinja2>=2.8' ],
       extras_require={
-          'test' : [ 'pytest', 'pytest-pythonpath' ],
+          'test' : [ 'pytest>=2.8.2', 'pytest-pythonpath>=0.7' ],
       },
       entry_points="""
       [console_scripts]
-      %s = ipgen.ipgen:main
+      %s = ipgen.run_ipgen:main
       """ % script_name,
 )

@@ -160,6 +160,5 @@ Description
 Related Project
 ===============
 
-`Pyverilog <http://shtaxxx.github.io/Pyverilog/>`__ - Python-based
-Hardware Design Processing Toolkit for Verilog HDL - Used as basic code
-analyser and generator
+`Pyverilog <https://github.com/PyHDI/Pyverilog>`__ - Python-based
+Hardware Design Processing Toolkit for Verilog HDL

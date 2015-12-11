@@ -8,7 +8,7 @@ PYTHON=python3
 TARGET=ipgen
 
 ## If you directly execute pycoram.py without installation
-LTARGET=$(PYTHON) $(OPT) $(ROOTDIR)/ipgen/ipgen.py
+LTARGET=$(PYTHON) $(OPT) $(ROOTDIR)/ipgen/run_ipgen.py
 
 ################################################################################
 IPVER=v1_00_a
