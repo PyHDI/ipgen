@@ -32,7 +32,7 @@ PARAMETER C_{{ master.name }}_AXI_SUPPORTS_THREADS = 0, DT = integer, ASSIGNMENT
 PARAMETER C_{{ master.name }}_AXI_THREAD_ID_WIDTH = 1, DT = integer, ASSIGNMENT = CONSTANT, BUS = {{ master.name }}_AXI
 {%- endif %}
 PARAMETER C_{{ master.name }}_AXI_ADDR_WIDTH = {{ ext_addrwidth }}, DT = integer, ASSIGNMENT = CONSTANT, BUS = {{ master.name }}_AXI
-PARAMETER C_{{ master.name }}_AXI_DATA_WIDTH = {{ master.ext_datawidth }}, DT = integer, ASSIGNMENT = CONSTANT, BUS = {{ master.name }}_AXI
+PARAMETER C_{{ master.name }}_AXI_DATA_WIDTH = {{ master.datawidth }}, DT = integer, ASSIGNMENT = CONSTANT, BUS = {{ master.name }}_AXI
 {%- if not master.lite %}
 PARAMETER C_{{ master.name }}_AXI_PROTOCOL = AXI4, DT = string, TYPE = NON_HDL, ASSIGNMENT = CONSTANT, BUS = {{ master.name }}_AXI
 {%- else %}
@@ -127,7 +127,7 @@ PORT {{ master.name }}_AXI_RREADY = RREADY, BUS = {{ master.name }}_AXI, DIR = O
 PARAMETER C_{{ slave.name }}_AXI_ID_WIDTH = 1, DT = integer, ASSIGNMENT = CONSTANT, BUS = {{ slave.name }}_AXI
 {%- endif %}
 PARAMETER C_{{ slave.name }}_AXI_ADDR_WIDTH = {{ ext_addrwidth }}, DT = integer, ASSIGNMENT = CONSTANT, BUS = {{ slave.name }}_AXI
-PARAMETER C_{{ slave.name }}_AXI_DATA_WIDTH = {{ slave.ext_datawidth }}, DT = integer, ASSIGNMENT = CONSTANT, BUS = {{ slave.name }}_AXI
+PARAMETER C_{{ slave.name }}_AXI_DATA_WIDTH = {{ slave.datawidth }}, DT = integer, ASSIGNMENT = CONSTANT, BUS = {{ slave.name }}_AXI
 {%- if not slave.lite %}
 PARAMETER C_{{ slave.name }}_AXI_PROTOCOL = AXI4, DT = string, TYPE = NON_HDL, ASSIGNMENT = CONSTANT, BUS = {{ slave.name }}_AXI
 {%- else %}
