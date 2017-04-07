@@ -5,7 +5,7 @@ IP-core package generator for AXI4/Avalon
 
 Copyright (C) 2015, Shinya Takamaeda-Yamazaki
 
-E-mail: shinya\_at\_is.naist.jp
+E-mail: takamaeda\_at\_ist.hokudai.ac.jp
 
 
 License
@@ -51,7 +51,7 @@ Install on your python environment by using pip.
 
     pip install jinja2 pytest pytest-pythonpath
 
-- Pyverilog: 1.0.0 or later
+- Pyverilog: 1.0.7 or later
 
 Install from pip:
 
