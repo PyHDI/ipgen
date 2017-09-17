@@ -1,11 +1,11 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # rtl_converter.py
-# 
+#
 # RTL Converter with Pyverilog
 #
 # Copyright (C) 2013, Shinya Takamaeda-Yamazaki
 # License: Apache 2.0
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 from __future__ import absolute_import
 from __future__ import print_function
 import sys
@@ -22,10 +22,13 @@ from pyverilog.vparser.parser import VerilogCodeParser
 from pyverilog.dataflow.modulevisitor import ModuleVisitor
 from pyverilog.utils.scope import ScopeLabel, ScopeChain
 
-TEMPLATE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/template/'
+TEMPLATE_DIR = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))) + '/template/'
 TEMPLATE_FILE = TEMPLATE_DIR + 'ipgen.v'
 
+
 class RtlConverter(object):
+
     def __init__(self, filelist, topmodule='userlogic', include=None, define=None):
         self.filelist = filelist
         self.topmodule = topmodule
@@ -40,7 +43,7 @@ class RtlConverter(object):
 
     def getTopParameters(self):
         return self.top_parameters
-    
+
     def getTopIOPorts(self):
         return self.top_ioports
 
@@ -49,7 +52,7 @@ class RtlConverter(object):
 
     def getNotFoundModules(self):
         return self.not_found_modules
-    
+
     def getResourceDefinitions(self):
         target_objects = self.getTargetObject()
         master_memory = []
@@ -78,59 +81,57 @@ class RtlConverter(object):
             idx = values['ID']
             addrwidth = values['ADDR_WIDTH']
             datawidth = values['DATA_WIDTH']
-            objs.append( MasterMemory(name, idx, addrwidth, datawidth, lite) )
-            
+            objs.append(MasterMemory(name, idx, addrwidth, datawidth, lite))
+
         return objs
 
     def getSlaveMemory(self, target_items, lite=False):
         objs = []
-        
+
         for name, values in target_items:
             idx = values['ID']
             addrwidth = values['ADDR_WIDTH']
             datawidth = values['DATA_WIDTH']
-            objs.append( SlaveMemory(name, idx, addrwidth, datawidth, lite) )
+            objs.append(SlaveMemory(name, idx, addrwidth, datawidth, lite))
 
         return objs
-            
+
     def dumpTargetObject(self):
         target_object = self.getTargetObject()
+        print("[Bus Interfaces]")
         for mode, target_items in target_object.items():
-            print("----------------------------------------")
-            print("Target %s" % mode)
             for name, values in target_items:
                 printstr = []
                 printstr.append("  ")
                 printstr.append(name)
                 printstr.append(': ')
-                for valname, value in sorted(values.items(), key=lambda x:x[0]):
+                for valname, value in sorted(values.items(), key=lambda x: x[0]):
                     printstr.append('%s:%s ' % (valname, str(value)))
                 print(''.join(printstr))
 
         if self.not_found_modules:
-            print("----------------------------------------")
-            print("Not found module")
-        for nfound in self.not_found_modules:
-            printstr = []
-            printstr.append("  ")
-            printstr.append(nfound)
-            print(''.join(printstr))
+            print("[Not Found Module]")
+            for nfound in self.not_found_modules:
+                printstr = []
+                printstr.append("  ")
+                printstr.append(nfound)
+                print(''.join(printstr))
 
     def dumpResourceDefinitions(self):
         master_list, slave_list = self.getResourceDefinitions()
-        
+
         if master_list:
             print("MasterMemory")
-        for value in sorted(master_list, key=lambda x:x.name):
+        for value in sorted(master_list, key=lambda x: x.name):
             key = value.name
             print(" %s: %s" % (key, value))
-            
+
         if slave_list:
             print("SlaveMemory")
-        for value in sorted(slave_list, key=lambda x:x.name):
+        for value in sorted(slave_list, key=lambda x: x.name):
             key = value.name
             print(" %s: %s" % (key, value))
-        
+
     def generate(self, skip_not_found=False):
         code_parser = VerilogCodeParser(self.filelist,
                                         preprocess_include=self.include,
@@ -142,48 +143,54 @@ class RtlConverter(object):
         modulenames = module_visitor.get_modulenames()
         moduleinfotable = module_visitor.get_moduleinfotable()
 
-        template_parser = VerilogCodeParser( (self.template_file,) )
+        template_parser = VerilogCodeParser((self.template_file,))
         template_ast = template_parser.parse()
         template_visitor = ModuleVisitor()
         template_visitor.visit(template_ast)
         templateinfotable = template_visitor.get_moduleinfotable()
 
-        instanceconvert_visitor = InstanceConvertVisitor(moduleinfotable, self.topmodule, templateinfotable, skip_not_found=skip_not_found)
+        instanceconvert_visitor = InstanceConvertVisitor(
+            moduleinfotable, self.topmodule, templateinfotable, skip_not_found=skip_not_found)
         instanceconvert_visitor.start_visit()
 
         replaced_instance = instanceconvert_visitor.getMergedReplacedInstance()
         replaced_instports = instanceconvert_visitor.getReplacedInstPorts()
-        replaced_items = instanceconvert_visitor.getReplacedItems()        
+        replaced_items = instanceconvert_visitor.getReplacedItems()
 
         new_moduleinfotable = instanceconvert_visitor.get_new_moduleinfotable()
-        instancereplace_visitor = InstanceReplaceVisitor(replaced_instance, 
+        instancereplace_visitor = InstanceReplaceVisitor(replaced_instance,
                                                          replaced_instports,
                                                          replaced_items,
                                                          new_moduleinfotable)
         ret = instancereplace_visitor.getAST()
 
-        # gather user-defined io-ports on top-module and parameters to connect external
+        # gather user-defined io-ports on top-module and parameters to connect
+        # external
         frametable = instanceconvert_visitor.getFrameTable()
         top_ioports = []
         for i in moduleinfotable.getIOPorts(self.topmodule):
-            if signaltype.isClock(i) or signaltype.isReset(i): continue
+            if signaltype.isClock(i) or signaltype.isReset(i):
+                continue
             top_ioports.append(i)
 
-        top_scope = ScopeChain( [ScopeLabel(self.topmodule, 'module')] )
+        top_scope = ScopeChain([ScopeLabel(self.topmodule, 'module')])
         top_sigs = frametable.getSignals(top_scope)
         top_params = frametable.getConsts(top_scope)
-        
+
         for sk, sv in top_sigs.items():
-            if len(sk) > 2: continue
+            if len(sk) > 2:
+                continue
             signame = sk[1].scopename
             for svv in sv:
-                if (signame in top_ioports and 
+                if (signame in top_ioports and
                     not (signaltype.isClock(signame) or signaltype.isReset(signame)) and
-                    isinstance(svv, vast.Input) or isinstance(svv, vast.Output) or isinstance(svv, vast.Inout)):
+                        isinstance(svv, vast.Input) or isinstance(svv, vast.Output) or isinstance(svv, vast.Inout)):
                     port = svv
                     if port.width is not None:
-                        msb_val = instanceconvert_visitor.optimize(instanceconvert_visitor.getTree(port.width.msb, top_scope))
-                        lsb_val = instanceconvert_visitor.optimize(instanceconvert_visitor.getTree(port.width.lsb, top_scope))
+                        msb_val = instanceconvert_visitor.optimize(
+                            instanceconvert_visitor.getTree(port.width.msb, top_scope))
+                        lsb_val = instanceconvert_visitor.optimize(
+                            instanceconvert_visitor.getTree(port.width.lsb, top_scope))
                         width = int(msb_val.value) - int(lsb_val.value) + 1
                     else:
                         width = None
@@ -191,10 +198,12 @@ class RtlConverter(object):
                     break
 
         for ck, cv in top_params.items():
-            if len(ck) > 2: continue
+            if len(ck) > 2:
+                continue
             signame = ck[1].scopename
             param = cv[0]
-            if isinstance(param, vast.Genvar): continue
+            if isinstance(param, vast.Genvar):
+                continue
             self.top_parameters[signame] = param
 
         self.target_object = instanceconvert_visitor.getTargetObject()
