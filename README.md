@@ -76,7 +76,7 @@ Install on your python environment by using pip.
 
     pip install jinja2 pytest pytest-pythonpath
 
-- Pyverilog: 1.0.7 or later
+- Pyverilog: 1.1.0 or later
 
 Install from pip:
 
