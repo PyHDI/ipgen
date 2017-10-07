@@ -154,13 +154,6 @@ Command
 Description
 -----------
 
--  file
-
-   -  User-logic Verilog file (.v) and FPGA system specification
-      (.config). .v file is recognized as a user-logic Verilog file, and
-      .config file recongnized as a system specification file,
-      respectively.
-
 -  config
 
    -  System configuration file which includes memory and device
@@ -168,7 +161,7 @@ Description
 
 -  -t
 
-   -  top-module name of user logic, default: 'top'
+   -  Top-module name of user logic, default: 'top'
 
 -  --ipname
 
@@ -187,7 +180,15 @@ Description
 
 -  -I
 
-   -  include path
+   -  Include path
+
+-  -D
+
+   -  Macro definition
+
+-  file
+
+   -  User-logic Verilog file (.v)
 
 Related Project
 ===============
