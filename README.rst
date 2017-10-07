@@ -82,7 +82,7 @@ Install on your python environment by using pip.
 
     pip install jinja2 pytest pytest-pythonpath
 
--  Pyverilog: 1.1.0 or later
+-  Pyverilog: 1.1.1 or later
 
 Install from pip:
 
@@ -111,7 +111,7 @@ You can use the ipgen command from your console.
 You can find the sample projects in 'tests'. Now let's see
 'tests/memcpy'. There is an input source code.
 
--  userlogic.v : User-defined Verilog code using IPgen abstract memory
+-  memcpy.v : User-defined Verilog code using IPgen abstract memory
    interfaces
 
 Then type 'make' and 'make run' to simulate sample system.
@@ -125,17 +125,16 @@ Or type commands as below directly.
 
 ::
 
-    ipgen default.config -t userlogic -I include tests/memcpyuserlogic.v
-    iverilog -I ipen_userlogic_v1_00_a/hdl/verilog/ ipgen_userlogic_v1_00_a/test/test_ipgen_userlogic.v 
+    ipgen default.config -t memcpy -I include tests/memcpy/memcpy.v
+    iverilog -I memcpy_ip_v1_00_a/hdl/verilog/ memcpy_ip_v1_00_a/test/test_memcpy_ip.v 
     ./a.out
 
-IPgen compiler generates a directory for IP-core
-(ipgen\_userlogic\_v1\_00\_a, in this example).
+IPgen compiler generates a directory for IP-core (memcpy\_ip\_v1\_00\_a,
+in this example).
 
-'ipgen\_userlogic\_v1\_00\_a.v' includes - IP-core RTL design
-(hdl/verilog/ipgen\_userlogic.v) - Test bench
-(test/test\_ipgen\_userlogic.v) - XPS setting files
-(ipgen\_userlogic\_v2\_1\_0.{mpd,pao,tcl}) - IP-XACT file
+'memcpy\_ip\_v1\_00\_a.v' includes - IP-core RTL design
+(hdl/verilog/memcpy\_ip.v) - Test bench (test/test\_memcpy\_ip.v) - XPS
+setting files (memcpy\_ip\_v2\_1\_0.{mpd,pao,tcl}) - IP-XACT file
 (component.xml)
 
 A bit-stream can be synthesized by using Xilinx Platform Studio, Xilinx
@@ -150,40 +149,45 @@ Command
 
 ::
 
-    ipgen [config] [-t topmodule] [-I includepath]+ [--memimg=filename] [--usertest=filename] [file]+
+    ipgen [config] [-t topmodule] [--ipname=ipname] [--memimg=memimg_name] [--usertest=usertest_name] [-I include]+ [-D define]+ [file]+
 
 Description
 -----------
 
 -  file
 
-   -  User-logic Verilog file (.v) and FPGA system memory specification
-      (.config). Automatically, .v file is recognized as a user-logic
-      Verilog file, and .config file recongnized as a memory
-      specification of used FPGA system, respectively.
+   -  User-logic Verilog file (.v) and FPGA system specification
+      (.config). .v file is recognized as a user-logic Verilog file, and
+      .config file recongnized as a system specification file,
+      respectively.
 
 -  config
 
-   -  Configuration file which includes memory and device specification
+   -  System configuration file which includes memory and device
+      specifications
 
 -  -t
 
-   -  Name of user-defined top module, default is "userlogic".
+   -  top-module name of user logic, default: 'top'
 
--  -I
+-  --ipname
 
-   -  Include path for input Verilog HDL files.
+   -  IP-core package name, default: '(topmodule)*ip*\ (version)'
 
 -  --memimg
 
-   -  DRAM image file in HEX DRAM (option, if you need). The file is
-      copied into test directory. If no file is assigned, the array is
-      initialized with incremental values.
+   -  Memory image file in HEX (option). The file is copied into test
+      directory. If no file is assigned, the array is initialized with
+      incremental values.
 
 -  --usertest
 
-   -  User-defined test code file (option, if you need). The code is
-      copied into testbench script.
+   -  User-defined test code file (option). The code is copied into
+      testbench script.
+
+-  -I
+
+   -  include path
 
 Related Project
 ===============
