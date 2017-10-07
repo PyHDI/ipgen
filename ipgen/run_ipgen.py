@@ -101,8 +101,8 @@ def main():
 
     if not options.silent:
         print("[Input Files]")
-        print("  configuration: %s" % configfile)
-        print("  user-logic: %s" % ', '.join(userlogic_filelist))
+        print("  Configuration: %s" % configfile)
+        print("  User-logic: %s" % ', '.join(userlogic_filelist))
 
     # default values
     configs = {

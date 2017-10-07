@@ -207,12 +207,12 @@ class SystemBuilder(object):
         # print settings
         if not silent:
             print("[IP-core Information]")
-            print("  IP-core name : %s" % ipname)
-            print("  Top-module name : %s" % topmodule)
+            print("  IP-core name: %s" % ipname)
+            print("  Top-module name: %s" % topmodule)
 
             print("[Synthesis Option]")
             for k, v in sorted(configs.items(), key=lambda x: x[0]):
-                print("  %s : %s" % (str(k), str(v)))
+                print("  %s: %s" % (str(k), str(v)))
 
         # write to file
         if configs['if_type'] == 'general':
