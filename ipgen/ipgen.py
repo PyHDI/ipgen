@@ -6,8 +6,10 @@
 # Copyright (C) 2013, Shinya Takamaeda-Yamazaki
 # License: Apache 2.0
 #-------------------------------------------------------------------------
+
 from __future__ import absolute_import
 from __future__ import print_function
+
 import os
 import sys
 import math
@@ -25,13 +27,14 @@ from pyverilog.ast_code_generator.codegen import ASTCodeGenerator
 
 TEMPLATE_DIR = os.path.dirname(os.path.abspath(__file__)) + '/template/'
 
+# default value
+default_ext_burstlength = 256
 
-#-------------------------------------------------------------------------
+
 def log2(v):
     return int(math.ceil(math.log(v, 2)))
 
 
-#-------------------------------------------------------------------------
 class SystemBuilder(object):
 
     def __init__(self):
@@ -41,15 +44,20 @@ class SystemBuilder(object):
         self.env.globals['log2'] = log2
         self.env.globals['len'] = len
 
-    #-------------------------------------------------------------------------
-    def render(self, template_file, userlogic_name,
+    def render(self, template_file,
+               userlogic_name, ipname,
                masterlist, slavelist,
                def_top_parameters, def_top_localparams,
                def_top_ioports, name_top_ioports,
+
                ext_addrwidth=32, ext_burstlength=256,
                single_clock=False,
-               hdlname=None, common_hdlname=None, testname=None, ipcore_version=None,
-               memimg=None, binfile=False, usertestcode=None, simaddrwidth=None,
+               hdlname=None, common_hdlname=None,
+               testname=None,
+               ipcore_version=None,
+               memimg=None, binfile=False,
+               usertestcode=None, simaddrwidth=None,
+
                mpd_parameters=None, mpd_ports=None,
                tcl_parameters=None, tcl_ports=None,
                clock_hperiod_userlogic=None,
@@ -59,6 +67,7 @@ class SystemBuilder(object):
         ext_burstlen_width = log2(ext_burstlength)
         template_dict = {
             'userlogic_name': userlogic_name,
+            'ipname': ipname,
 
             'masterlist': masterlist,
             'slavelist': slavelist,
@@ -97,21 +106,17 @@ class SystemBuilder(object):
         rslt = template.render(template_dict)
         return rslt
 
-    #-------------------------------------------------------------------------
-    def build(self, configs, userlogic_topmodule,  userlogic_filelist,
+    def build(self, configs, topmodule, ipname, filelist,
               include=None, define=None, memimg=None, usertest=None,
-              skip_not_found=False, ignore_protocol_error=False,
-              silent=False):
+              skip_not_found=False, ignore_protocol_error=False, silent=False):
 
-        # default values
-        ext_burstlength = 256
-
-        if configs['single_clock'] and (configs['hperiod_ulogic'] != configs['hperiod_bus']):
+        if (configs['single_clock'] and
+                (configs['hperiod_ulogic'] != configs['hperiod_bus'])):
             raise ValueError(
                 "All clock periods should be same in single clock mode.")
 
-        # User RTL Conversion
-        converter = RtlConverter(userlogic_filelist, userlogic_topmodule,
+        # RTL conversion
+        converter = RtlConverter(filelist, topmodule,
                                  include=include, define=define)
         userlogic_ast = converter.generate(skip_not_found)
 
@@ -121,15 +126,16 @@ class SystemBuilder(object):
 
         not_found_modules = converter.getNotFoundModules()
 
-        # dump
+        # print target object
         if not silent:
             converter.dumpTargetObject()
 
-        # Code Generator
+        # code generator
         asttocode = ASTCodeGenerator()
         userlogic_code = asttocode.visit(userlogic_ast)
 
         asttocode = ASTCodeGenerator()
+
         def_top_parameters = []
         def_top_localparams = []
         def_top_ioports = []
@@ -157,15 +163,15 @@ class SystemBuilder(object):
 
         node_template_file = ('node_axi.txt' if configs['if_type'] == 'axi' else
                               'node_avalon.txt' if configs['if_type'] == 'avalon' else
-                              #'node_wishborn.txt' if configs['if_type'] == 'wishborn' else
                               'node_general.txt')
 
-        node_code = self.render(node_template_file, userlogic_topmodule,
+        node_code = self.render(node_template_file,
+                                topmodule, ipname,
                                 masterlist, slavelist,
                                 def_top_parameters, def_top_localparams,
                                 def_top_ioports, name_top_ioports,
                                 ext_addrwidth=configs['ext_addrwidth'],
-                                ext_burstlength=ext_burstlength,
+                                ext_burstlength=default_ext_burstlength,
                                 single_clock=configs['single_clock'])
 
         # finalize of code generation
@@ -195,59 +201,74 @@ class SystemBuilder(object):
             common_code_list.append(
                 open(TEMPLATE_DIR + 'avalon_lite_slave_interface.v', 'r').read())
 
-        synthesized_code = ''.join(synthesized_code_list)
-        common_code = ''.join(common_code_list)
+        synthesized_code = '\n'.join(synthesized_code_list)
+        common_code = '\n'.join(common_code_list)
 
-        # Print settings
+        # print settings
         if not silent:
-            print("[IP-core Synthesis Setting]")
+            print("[IP-core Information]")
+            print("  IP-core name : %s" % ipname)
+            print("  Top-module name : %s" % topmodule)
+
+            print("[Synthesis Option]")
             for k, v in sorted(configs.items(), key=lambda x: x[0]):
                 print("  %s : %s" % (str(k), str(v)))
 
-        # write to file, without AXI interfaces
+        # write to file
         if configs['if_type'] == 'general':
-            self.build_package_general(configs, synthesized_code, common_code)
+            self.build_package_general(configs, synthesized_code, common_code,
+                                       masterlist, slavelist,
+                                       top_parameters, top_ioports,
+                                       topmodule, ipname,
+                                       memimg, usertest, ignore_protocol_error)
+
             return
 
         if configs['if_type'] == 'axi':
             self.build_package_axi(configs, synthesized_code, common_code,
                                    masterlist, slavelist,
-                                   top_parameters, top_ioports, userlogic_topmodule,
+                                   top_parameters, top_ioports,
+                                   topmodule, ipname,
                                    memimg, usertest, ignore_protocol_error)
             return
 
         if configs['if_type'] == 'avalon':
             self.build_package_avalon(configs, synthesized_code, common_code,
                                       masterlist, slavelist,
-                                      top_parameters, top_ioports, userlogic_topmodule,
+                                      top_parameters, top_ioports,
+                                      topmodule, ipname,
                                       memimg, usertest, ignore_protocol_error)
             return
 
         raise ValueError("Interface type '%s' is not supported." %
                          configs['if_type'])
 
-    #-------------------------------------------------------------------------
-    def build_package_general(self, configs, synthesized_code, common_code):
-        code = synthesized_code + common_code
+    def build_package_general(self, configs, synthesized_code, common_code,
+                              masterlist, slavelist,
+                              top_parameters, top_ioports,
+                              topmodule, ipname,
+                              memimg, usertest, ignore_protocol_error):
+
+        code = '\n'.join([synthesized_code, common_code])
+
         f = open(configs['output'], 'w')
         f.write(code)
         f.close()
 
-    #-------------------------------------------------------------------------
     def build_package_axi(self, configs, synthesized_code, common_code,
                           masterlist, slavelist,
-                          top_parameters, top_ioports, userlogic_topmodule,
+                          top_parameters, top_ioports,
+                          topmodule, ipname,
                           memimg, usertest, ignore_protocol_error):
-        code = synthesized_code + common_code
 
-        # default values
-        ext_burstlength = 256
+        code = '\n'.join([synthesized_code, common_code])
 
-        # write to files, with AXI interface
+        # write to files
         def_top_parameters = []
         def_top_localparams = []
         def_top_ioports = []
         name_top_ioports = []
+
         mpd_parameters = []
         mpd_ports = []
         ext_params = []
@@ -304,33 +325,32 @@ class SystemBuilder(object):
             _dt = 'string' if r.count('"') else 'integer'
             ext_params.append((_name, _value, _dt))
 
-        # write to files
-        # with AXI interface, create IPcore dir
+        # names
         ipcore_version = '_v1_00_a'
         mpd_version = '_v2_1_0'
 
-        dirname = 'ipgen_' + userlogic_topmodule + ipcore_version + '/'
+        dirname = ipname + ipcore_version + '/'
 
         # pcore
-        mpdname = 'ipgen_' + userlogic_topmodule + mpd_version + '.mpd'
-        #muiname = 'ipgen_' + userlogic_topmodule + mpd_version + '.mui'
-        paoname = 'ipgen_' + userlogic_topmodule + mpd_version + '.pao'
-        tclname = 'ipgen_' + userlogic_topmodule + mpd_version + '.tcl'
+        mpdname = ipname + mpd_version + '.mpd'
+        #muiname = ipname + mpd_version + '.mui'
+        paoname = ipname + mpd_version + '.pao'
+        tclname = ipname + mpd_version + '.tcl'
 
         # IP-XACT
         xmlname = 'component.xml'
-        xdcname = 'ipgen_' + userlogic_topmodule + '.xdc'
+        xdcname = ipname + '.xdc'
         bdname = 'bd.tcl'
         xguiname = 'xgui.tcl'
 
         # source
-        hdlname = 'ipgen_' + userlogic_topmodule + '.v'
-        testname = 'test_ipgen_' + userlogic_topmodule + '.v'
+        hdlname = ipname + '.v'
+        testname = 'test_' + ipname + '.v'
         memname = 'mem.img'
         makefilename = 'Makefile'
         copied_memimg = memname if memimg is not None else None
-        binfile = (True if memimg is not None and memimg.endswith(
-            '.bin') else False)
+        binfile = (True if memimg is not None and memimg.endswith('.bin')
+                   else False)
 
         # pcore
         mpdpath = dirname + 'data/'
@@ -369,44 +389,60 @@ class SystemBuilder(object):
 
         # mpd file
         mpd_template_file = 'mpd.txt'
-        mpd_code = self.render(mpd_template_file, userlogic_topmodule,
+        mpd_code = self.render(mpd_template_file,
+                               topmodule, ipname,
                                masterlist, slavelist,
-                               def_top_parameters, def_top_localparams, def_top_ioports, name_top_ioports,
-                               ext_addrwidth=configs[
-                                   'ext_addrwidth'], ext_burstlength=ext_burstlength,
+                               def_top_parameters, def_top_localparams,
+                               def_top_ioports, name_top_ioports,
+
+                               ext_addrwidth=configs['ext_addrwidth'],
+                               ext_burstlength=default_ext_burstlength,
                                single_clock=configs['single_clock'],
                                hdlname=hdlname,
                                ipcore_version=ipcore_version,
-                               mpd_ports=mpd_ports, mpd_parameters=mpd_parameters)
+                               mpd_ports=mpd_ports,
+                               mpd_parameters=mpd_parameters)
+
         f = open(mpdpath + mpdname, 'w')
         f.write(mpd_code)
         f.close()
 
         # mui file
         #mui_template_file = 'mui.txt'
-        # mui_code = self.render(mui_template_file, userlogic_topmodule,
+        # mui_code = self.render(mui_template_file,
+        #                       topmodule, ipname,
         #                       masterlist, slavelist,
-        #                       def_top_parameters, def_top_localparams, def_top_ioports, name_top_ioports,
-        #                       ext_addrwidth=configs['ext_addrwidth'], ext_burstlength=ext_burstlength,
+        #                       def_top_parameters, def_top_localparams,
+        #                       def_top_ioports, name_top_ioports,
+        #
+        #                       ext_addrwidth=configs['ext_addrwidth'],
+        #                       ext_burstlength=default_ext_burstlength,
         #                       single_clock=configs['single_clock'],
         #                       hdlname=hdlname,
         #                       ipcore_version=ipcore_version,
-        #                       mpd_ports=mpd_ports, mpd_parameters=mpd_parameters)
+        #                       mpd_ports=mpd_ports,
+        #                       mpd_parameters=mpd_parameters)
+        #
         #f = open(muipath+muiname, 'w')
         # f.write(mui_code)
         # f.close()
 
         # pao file
         pao_template_file = 'pao.txt'
-        pao_code = self.render(pao_template_file, userlogic_topmodule,
+        pao_code = self.render(pao_template_file,
+                               topmodule, ipname,
                                masterlist, slavelist,
-                               def_top_parameters, def_top_localparams, def_top_ioports, name_top_ioports,
-                               ext_addrwidth=configs[
-                                   'ext_addrwidth'], ext_burstlength=ext_burstlength,
+                               def_top_parameters, def_top_localparams,
+                               def_top_ioports, name_top_ioports,
+
+                               ext_addrwidth=configs['ext_addrwidth'],
+                               ext_burstlength=default_ext_burstlength,
                                single_clock=configs['single_clock'],
                                hdlname=hdlname,
                                ipcore_version=ipcore_version,
-                               mpd_ports=mpd_ports, mpd_parameters=mpd_parameters)
+                               mpd_ports=mpd_ports,
+                               mpd_parameters=mpd_parameters)
+
         f = open(paopath + paoname, 'w')
         f.write(pao_code)
         f.close()
@@ -415,6 +451,7 @@ class SystemBuilder(object):
         tcl_code = ''
         if not configs['single_clock']:
             tcl_code = open(TEMPLATE_DIR + 'pcore_tcl.tcl', 'r').read()
+
         f = open(tclpath + tclname, 'w')
         f.write(tcl_code)
         f.close()
@@ -422,19 +459,23 @@ class SystemBuilder(object):
         memorylist = []
         for m in masterlist:
             memorylist.append(
-                ipgen.utils.componentgen.AxiDefinition(m.name + '_AXI', m.datawidth, True, m.lite))
+                ipgen.utils.componentgen.AxiDefinition(
+                    m.name + '_AXI', m.datawidth, True, m.lite))
+
         for s in slavelist:
             memorylist.append(
-                ipgen.utils.componentgen.AxiDefinition(s.name + '_AXI', s.datawidth, False, s.lite))
+                ipgen.utils.componentgen.AxiDefinition(
+                    s.name + '_AXI', s.datawidth, False, s.lite))
 
         # component.xml
         gen = ipgen.utils.componentgen.ComponentGen()
-        xml_code = gen.generate('ipgen_' + userlogic_topmodule,
+        xml_code = gen.generate(ipname,
                                 memorylist,
                                 ext_addrwidth=configs['ext_addrwidth'],
-                                ext_burstlength=ext_burstlength,
+                                ext_burstlength=default_ext_burstlength,
                                 ext_ports=ext_ports,
                                 ext_params=ext_params)
+
         f = open(xmlpath + xmlname, 'w')
         f.write(xml_code)
         f.close()
@@ -443,6 +484,7 @@ class SystemBuilder(object):
         xdc_code = ''
         if not configs['single_clock']:
             xdc_code = open(TEMPLATE_DIR + 'ipxact.xdc', 'r').read()
+
         f = open(xdcpath + xdcname, 'w')
         f.write(xdc_code)
         f.close()
@@ -450,6 +492,7 @@ class SystemBuilder(object):
         # bd
         bd_code = ''
         bd_code = open(TEMPLATE_DIR + 'bd.tcl', 'r').read()
+
         f = open(bdpath + bdname, 'w')
         f.write(bd_code)
         f.close()
@@ -457,15 +500,19 @@ class SystemBuilder(object):
         # xgui file
         xgui_template_file = 'xgui_tcl.txt'
         xgui_code = self.render(xgui_template_file,
-                                userlogic_topmodule,
+                                topmodule, ipname,
                                 masterlist, slavelist,
-                                def_top_parameters, def_top_localparams, def_top_ioports, name_top_ioports,
-                                ext_addrwidth=configs[
-                                    'ext_addrwidth'], ext_burstlength=ext_burstlength,
+                                def_top_parameters, def_top_localparams,
+                                def_top_ioports, name_top_ioports,
+
+                                ext_addrwidth=configs['ext_addrwidth'],
+                                ext_burstlength=default_ext_burstlength,
                                 single_clock=configs['single_clock'],
                                 hdlname=hdlname,
                                 ipcore_version=ipcore_version,
-                                mpd_ports=mpd_ports, mpd_parameters=mpd_parameters)
+                                mpd_ports=mpd_ports,
+                                mpd_parameters=mpd_parameters)
+
         f = open(xguipath + xguiname, 'w')
         f.write(xgui_code)
         f.close()
@@ -482,20 +529,24 @@ class SystemBuilder(object):
 
         # test file
         test_template_file = 'test_ipgen_axi.txt'
-        test_code = self.render(test_template_file, userlogic_topmodule,
+        test_code = self.render(test_template_file,
+                                topmodule, ipname,
                                 masterlist, slavelist,
-                                def_top_parameters, def_top_localparams, def_top_ioports, name_top_ioports,
-                                ext_addrwidth=configs[
-                                    'ext_addrwidth'], ext_burstlength=ext_burstlength,
+                                def_top_parameters, def_top_localparams,
+                                def_top_ioports, name_top_ioports,
+
+                                ext_addrwidth=configs['ext_addrwidth'],
+                                ext_burstlength=default_ext_burstlength,
                                 single_clock=configs['single_clock'],
                                 hdlname=hdlname,
-                                memimg=copied_memimg, binfile=binfile,
+                                memimg=copied_memimg,
+                                binfile=binfile,
                                 usertestcode=usertestcode,
                                 simaddrwidth=configs['sim_addrwidth'],
-                                clock_hperiod_userlogic=configs[
-                                    'hperiod_ulogic'],
+                                clock_hperiod_userlogic=configs['hperiod_ulogic'],
                                 clock_hperiod_bus=configs['hperiod_bus'],
                                 ignore_protocol_error=ignore_protocol_error)
+
         f = open(testpath + testname, 'w')
         f.write(test_code)
         f.write(open(TEMPLATE_DIR + 'axi_master_fifo.v', 'r').read())
@@ -507,25 +558,25 @@ class SystemBuilder(object):
 
         # makefile file
         makefile_template_file = 'Makefile.txt'
-        makefile_code = self.render(makefile_template_file, userlogic_topmodule,
+        makefile_code = self.render(makefile_template_file,
+                                    topmodule, ipname,
                                     masterlist, slavelist,
-                                    def_top_parameters, def_top_localparams, def_top_ioports, name_top_ioports,
-                                    ext_addrwidth=configs[
-                                        'ext_addrwidth'], ext_burstlength=ext_burstlength,
+                                    def_top_parameters, def_top_localparams,
+                                    def_top_ioports, name_top_ioports,
+                                    ext_addrwidth=configs['ext_addrwidth'],
+                                    ext_burstlength=default_ext_burstlength,
                                     single_clock=configs['single_clock'],
                                     testname=testname)
+
         f = open(makefilepath + makefilename, 'w')
         f.write(makefile_code)
         f.close()
 
-    #-------------------------------------------------------------------------
     def build_package_avalon(self, configs, synthesized_code, common_code,
                              masterlist, slavelist,
-                             top_parameters, top_ioports, userlogic_topmodule,
+                             top_parameters, top_ioports,
+                             topmodule, ipname,
                              memimg, usertest, ignore_protocol_error):
-
-        # default values
-        ext_burstlength = 256
 
         # write to files, with AXI interface
         def_top_parameters = []
@@ -561,18 +612,22 @@ class SystemBuilder(object):
             _vec = str(pwidth)
             tcl_ports.append((_name, _dir, _vec))
 
-        # write to files
+        # names
         ipcore_version = '_v1_00_a'
-        dirname = 'ipgen_' + userlogic_topmodule + ipcore_version + '/'
-        tclname = 'ipgen_' + userlogic_topmodule + '.tcl'
-        hdlname = 'ipgen_' + userlogic_topmodule + '.v'
+
+        dirname = ipname + ipcore_version + '/'
+
+        tclname = ipname + '.tcl'
+
+        hdlname = ipname + '.v'
         common_hdlname = 'ipgen_common.v'
-        testname = 'test_ipgen_' + userlogic_topmodule + '.v'
+        testname = 'test_' + ipname + '.v'
         memname = 'mem.img'
         makefilename = 'Makefile'
         copied_memimg = memname if memimg is not None else None
-        binfile = (True if memimg is not None and memimg.endswith(
-            '.bin') else False)
+        binfile = (True if memimg is not None and memimg.endswith('.bin')
+                   else False)
+
         hdlpath = dirname + 'hdl/'
         verilogpath = dirname + 'hdl/verilog/'
         tclpath = dirname + 'hdl/verilog/'
@@ -590,15 +645,19 @@ class SystemBuilder(object):
 
         # tcl file
         tcl_template_file = 'qsys_tcl.txt'
-        tcl_code = self.render(tcl_template_file, userlogic_topmodule,
+        tcl_code = self.render(tcl_template_file,
+                               topmodule, ipname,
                                masterlist, slavelist,
                                def_top_parameters, def_top_localparams,
                                def_top_ioports, name_top_ioports,
-                               ext_addrwidth=configs[
-                                   'ext_addrwidth'], ext_burstlength=ext_burstlength,
+                               ext_addrwidth=configs['ext_addrwidth'],
+                               ext_burstlength=default_ext_burstlength,
                                single_clock=configs['single_clock'],
-                               hdlname=hdlname, common_hdlname=common_hdlname,
-                               tcl_ports=tcl_ports, tcl_parameters=tcl_parameters)
+                               hdlname=hdlname,
+                               common_hdlname=common_hdlname,
+                               tcl_ports=tcl_ports,
+                               tcl_parameters=tcl_parameters)
+
         f = open(tclpath + tclname, 'w')
         f.write(tcl_code)
         f.close()
@@ -620,21 +679,24 @@ class SystemBuilder(object):
 
         # test file
         test_template_file = 'test_ipgen_avalon.txt'
-        test_code = self.render(test_template_file, userlogic_topmodule,
+        test_code = self.render(test_template_file,
+                                topmodule, ipname,
                                 masterlist, slavelist,
                                 def_top_parameters, def_top_localparams,
                                 def_top_ioports, name_top_ioports,
-                                ext_addrwidth=configs[
-                                    'ext_addrwidth'], ext_burstlength=ext_burstlength,
+                                ext_addrwidth=configs['ext_addrwidth'],
+                                ext_burstlength=default_ext_burstlength,
                                 single_clock=configs['single_clock'],
-                                hdlname=hdlname, common_hdlname=common_hdlname,
-                                memimg=copied_memimg, binfile=binfile,
+                                hdlname=hdlname,
+                                common_hdlname=common_hdlname,
+                                memimg=copied_memimg,
+                                binfile=binfile,
                                 usertestcode=usertestcode,
                                 simaddrwidth=configs['sim_addrwidth'],
-                                clock_hperiod_userlogic=configs[
-                                    'hperiod_ulogic'],
+                                clock_hperiod_userlogic=configs['hperiod_ulogic'],
                                 clock_hperiod_bus=configs['hperiod_bus'],
                                 ignore_protocol_error=ignore_protocol_error)
+
         f = open(testpath + testname, 'w')
         f.write(test_code)
         f.write(open(TEMPLATE_DIR + 'avalon_master_fifo.v', 'r').read())
@@ -646,14 +708,16 @@ class SystemBuilder(object):
 
         # makefile file
         makefile_template_file = 'Makefile.txt'
-        makefile_code = self.render(makefile_template_file, userlogic_topmodule,
+        makefile_code = self.render(makefile_template_file,
+                                    topmodule, ipname,
                                     masterlist, slavelist,
                                     def_top_parameters, def_top_localparams,
                                     def_top_ioports, name_top_ioports,
-                                    ext_addrwidth=configs[
-                                        'ext_addrwidth'], ext_burstlength=ext_burstlength,
+                                    ext_addrwidth=configs['ext_addrwidth'],
+                                    ext_burstlength=default_ext_burstlength,
                                     single_clock=configs['single_clock'],
                                     testname=testname)
+
         f = open(makefilepath + makefilename, 'w')
         f.write(makefile_code)
         f.close()

@@ -2,16 +2,16 @@ package require -exact qsys 14.0
 
 
 # 
-# module ipgen_{{ userlogic_name.lower() }}
+# module {{ ipname }}
 # 
 set_module_property DESCRIPTION ""
-set_module_property NAME ipgen_{{ userlogic_name.lower() }}
+set_module_property NAME {{ ipname }}
 set_module_property VERSION 1.0
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property GROUP ipgen_ipcores
 set_module_property AUTHOR ""
-set_module_property DISPLAY_NAME ipgen_{{ userlogic_name.lower() }}
+set_module_property DISPLAY_NAME {{ ipname }}
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
 set_module_property EDITABLE true
 set_module_property REPORT_TO_TALKBACK false
@@ -23,7 +23,7 @@ set_module_property REPORT_HIERARCHY false
 # file sets
 # 
 add_fileset QUARTUS_SYNTH QUARTUS_SYNTH "" ""
-set_fileset_property QUARTUS_SYNTH TOP_LEVEL ipgen_{{ userlogic_name.lower() }}
+set_fileset_property QUARTUS_SYNTH TOP_LEVEL {{ ipname }}
 set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false
 set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false
 add_fileset_file "./implementation/{{ hdlname }}" VERILOG PATH {{ hdlname }} TOP_LEVEL_FILE
@@ -168,7 +168,7 @@ set_interface_property conduit_end_0 CMSIS_SVD_VARIABLES ""
 set_interface_property conduit_end_0 SVD_ADDRESS_GROUP ""
 {%- endif %}
 {%- for port in tcl_ports | sort(attribute=0) %}
-add_interface_port conduit_end_0 {{ port[0] }} ipgen_{{ userlogic_name.lower() }}_{{ port[0] }} {{ port[1] }} {{ port[2] }}
+add_interface_port conduit_end_0 {{ port[0] }} {{ ipname }}_{{ port[0] }} {{ port[1] }} {{ port[2] }}
 {% endfor %}
 
 

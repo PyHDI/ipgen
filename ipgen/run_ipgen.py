@@ -6,11 +6,15 @@
 # Copyright (C) 2013, Shinya Takamaeda-Yamazaki
 # License: Apache 2.0
 #-------------------------------------------------------------------------
+
 from __future__ import absolute_import
 from __future__ import print_function
+
 import os
 import sys
 import glob
+from optparse import OptionParser
+
 if sys.version_info[0] < 3:
     import ConfigParser as configparser
 else:
@@ -22,12 +26,13 @@ import ipgen.utils.version
 from ipgen.ipgen import SystemBuilder
 
 
-#-------------------------------------------------------------------------
 def main():
-    from optparse import OptionParser
     INFO = "IPgen: IP-core package generator for AXI4/Avalon"
     VERSION = ipgen.utils.version.VERSION
-    USAGE = "Usage: python run_ipgen.py [config] [-t topmodule] [-I includepath]+ [--memimg=filename] [--usertest=filename] [file]+"
+    USAGE = """Usage: python3 run_ipgen.py """
+    """[config] [-t topmodule] [--ipname=ipname] """
+    """[--memimg=memimg_name] [--usertest=usertest_name] """
+    """[-I include]+ [-D define]+ [file]+"""
 
     def showVersion():
         print(INFO)
@@ -37,25 +42,38 @@ def main():
 
     optparser = OptionParser()
     optparser.add_option("-v", "--version", action="store_true", dest="showversion",
-                         default=False, help="Show the version")
-    optparser.add_option("-t", "--top", dest="topmodule",
-                         default="TOP", help="Top module of user logic, Default=userlogic")
+                         default=False, help="show version")
+
     optparser.add_option("-I", "--include", dest="include", action="append",
-                         default=[], help="Include path")
+                         default=[], help="include path")
     optparser.add_option("-D", dest="define", action="append",
-                         default=[], help="Macro Definition")
+                         default=[], help="macro definition")
+
+    optparser.add_option("-t", "--topmodule", dest="topmodule",
+                         default="top", help="top-module name of user logic, default: 'top'")
+    optparser.add_option("--ipname", dest="ipname",
+                         default=None,
+                         help="IP-core package name, default: '(topmodule)_ip_(version)'")
+
     optparser.add_option("--memimg", dest="memimg",
-                         default=None, help="Memory image file, Default=None")
+                         default=None, help="memory image file, default: None")
     optparser.add_option("--usertest", dest="usertest",
-                         default=None, help="User-defined test code file, Default=None")
-    optparser.add_option("--skip", action="store_true", dest="skip_not_found",
-                         default=False, help="Skip not found modules")
+                         default=None, help="user-defined test code file, default: None")
+
+    optparser.add_option("--skip_not_found", action="store_true", dest="skip_not_found",
+                         default=False, help="skip not found modules")
     optparser.add_option("--ignore_protocol_error", action="store_true",
                          dest="ignore_protocol_error",
-                         default=False, help="Ignore protocol error")
+                         default=False, help="ignore protocol error")
     optparser.add_option("--silent", action="store_true", dest="silent",
-                         default=False, help="Silent mode")
+                         default=False, help="silent mode")
+
     (options, args) = optparser.parse_args()
+
+    if options.ipname is None:
+        ipname = options.topmodule + '_ip'
+    else:
+        ipname = options.ipname
 
     filelist = []
     for arg in args:
@@ -78,7 +96,7 @@ def main():
             userlogic_filelist.append(f)
         if f.endswith('.config'):
             if configfile is not None:
-                raise IOError("Multiple configuration files")
+                raise IOError("multiple configuration files")
             configfile = f
 
     if not options.silent:
@@ -97,6 +115,7 @@ def main():
     }
 
     confp = configparser.SafeConfigParser()
+
     if configfile is not None:
         confp.read(configfile)
 
@@ -127,15 +146,18 @@ def main():
     builder = SystemBuilder()
     builder.build(configs,
                   options.topmodule,
+                  ipname,
                   userlogic_filelist,
+
                   include=options.include,
                   define=options.define,
-                  usertest=options.usertest,
                   memimg=options.memimg,
+                  usertest=options.usertest,
+
                   skip_not_found=options.skip_not_found,
                   ignore_protocol_error=options.ignore_protocol_error,
                   silent=options.silent)
 
-#-------------------------------------------------------------------------
+
 if __name__ == '__main__':
     main()

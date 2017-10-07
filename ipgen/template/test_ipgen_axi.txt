@@ -223,7 +223,7 @@ module test;
 {% endfor %}
 
 
-  ipgen_{{ userlogic_name.lower() }}
+  {{ ipname }}
   inst_uut
   (
 {% for master in masterlist | sort(attribute='name') %}

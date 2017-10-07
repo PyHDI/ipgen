@@ -1,4 +1,4 @@
-module ipgen_{{ userlogic_name.lower() }} #
+module {{ ipname }} #
   (
    //---------------------------------------------------------------------------
    // User-defined parameter in Top-level User logic

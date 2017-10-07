@@ -12,7 +12,7 @@ LTARGET=$(PYTHON) $(OPT) $(ROOTDIR)/ipgen/run_ipgen.py
 
 ################################################################################
 IPVER=v1_00_a
-OUTPUTDIR=ipgen_$(TOPMODULE)_$(IPVER)
+OUTPUTDIR=$(TOPMODULE)_ip_$(IPVER)
 INPUT=$(RTL) $(CONFIG)
 OPTIONS=$(MEMIMG) $(USERTEST) $(SKIP) $(IGNORE)
 ARGS=$(INCLUDE) -t $(TOPMODULE) $(OPTIONS)
