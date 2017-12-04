@@ -64,7 +64,7 @@ module {{ ipname }} #
    output wire [8-1:0] {{ master.name }}_AXI_AWLEN,
    output wire [3-1:0] {{ master.name }}_AXI_AWSIZE,
    output wire [2-1:0] {{ master.name }}_AXI_AWBURST,
-   output wire {{ master.name }}_AXI_AWLOCK,
+   output wire [2-1:0] {{ master.name }}_AXI_AWLOCK,
    output wire [4-1:0] {{ master.name }}_AXI_AWCACHE,
 {%- endif %}
    output wire [3-1:0] {{ master.name }}_AXI_AWPROT,

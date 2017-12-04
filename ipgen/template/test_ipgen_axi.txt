@@ -114,7 +114,7 @@ module test;
   wire [8-1:0]                       {{ master.name }}_AXI_AWLEN;
   wire [3-1:0]                       {{ master.name }}_AXI_AWSIZE;
   wire [2-1:0]                       {{ master.name }}_AXI_AWBURST;
-  wire                               {{ master.name }}_AXI_AWLOCK;
+  wire [2-1:0]                       {{ master.name }}_AXI_AWLOCK;
   wire [4-1:0]                       {{ master.name }}_AXI_AWCACHE;
   wire [3-1:0]                       {{ master.name }}_AXI_AWPROT;
   wire [4-1:0]                       {{ master.name }}_AXI_AWQOS;
@@ -393,7 +393,7 @@ module test;
   assign {{ master.name }}_AXI_AWLEN = 0;
   assign {{ master.name }}_AXI_AWSIZE = {{ log2(int(master.datawidth / 8)) }};
   assign {{ master.name }}_AXI_AWBURST = 2'b01;
-  assign {{ master.name }}_AXI_AWLOCK = 1'b0;
+  assign {{ master.name }}_AXI_AWLOCK = 2'b00;
   assign {{ master.name }}_AXI_AWCACHE = 4'b0011;
   assign {{ master.name }}_AXI_AWQOS = 4'b0;
   assign {{ master.name }}_AXI_AWUSER = 0;
@@ -405,7 +405,7 @@ module test;
   assign {{ master.name }}_AXI_ARLEN = 0;
   assign {{ master.name }}_AXI_ARSIZE = {{ log2(int(master.datawidth / 8)) }};
   assign {{ master.name }}_AXI_ARBURST = 2'b01;
-  assign {{ master.name }}_AXI_ARLOCK = 1'b0;
+  assign {{ master.name }}_AXI_ARLOCK = 2'b00;
   assign {{ master.name }}_AXI_ARCACHE = 4'b0011;
   assign {{ master.name }}_AXI_ARQOS = 4'b0;
   assign {{ master.name }}_AXI_ARUSER = 0;
@@ -551,7 +551,7 @@ module test;
    .M_AXI_AWLEN({{ slave.name }}_AXI_AWLEN),
    .M_AXI_AWSIZE({{ slave.name }}_AXI_AWSIZE),
    .M_AXI_AWBURST({{ slave.name }}_AXI_AWBURST),
-   .M_AXI_AWLOCK({{ slave.name }}_AXI_AWLOCK[0]),
+   .M_AXI_AWLOCK({{ slave.name }}_AXI_AWLOCK),
    .M_AXI_AWCACHE({{ slave.name }}_AXI_AWCACHE),
    .M_AXI_AWPROT({{ slave.name }}_AXI_AWPROT),
    .M_AXI_AWQOS({{ slave.name }}_AXI_AWQOS),
@@ -594,7 +594,6 @@ module test;
    .M_AXI_RREADY({{ slave.name }}_AXI_RREADY)
   );
   assign {{ slave.name }}_AXI_AWREGION = 0;
-  assign {{ slave.name }}_AXI_AWLOCK[1] = 1'b0;
 {% endfor %}
 
   initial begin
@@ -802,7 +801,7 @@ module dram_stub #
    input  wire [8-1:0]                       {{ master.name }}_AXI_AWLEN,
    input  wire [3-1:0]                       {{ master.name }}_AXI_AWSIZE,
    input  wire [2-1:0]                       {{ master.name }}_AXI_AWBURST,
-   input  wire                               {{ master.name }}_AXI_AWLOCK,
+   input  wire [2-1:0]                       {{ master.name }}_AXI_AWLOCK,
    input  wire [4-1:0]                       {{ master.name }}_AXI_AWCACHE,
    input  wire [3-1:0]                       {{ master.name }}_AXI_AWPROT,
    input  wire [4-1:0]                       {{ master.name }}_AXI_AWQOS,

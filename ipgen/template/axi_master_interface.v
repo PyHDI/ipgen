@@ -81,7 +81,7 @@ module axi_master_interface #
    output wire [8-1:0]                       M_AXI_AWLEN,
    output wire [3-1:0]                       M_AXI_AWSIZE,
    output wire [2-1:0]                       M_AXI_AWBURST,
-   output wire                               M_AXI_AWLOCK,
+   output wire [2-1:0]                       M_AXI_AWLOCK,
    output wire [4-1:0]                       M_AXI_AWCACHE,
    output wire [3-1:0]                       M_AXI_AWPROT,
    output wire [4-1:0]                       M_AXI_AWQOS,
@@ -156,7 +156,7 @@ module axi_master_interface #
   assign M_AXI_AWLEN = awlen;
   assign M_AXI_AWSIZE = C_M_AXI_ADDRMASK_WIDTH;
   assign M_AXI_AWBURST = BURST_INCR;
-  assign M_AXI_AWLOCK = 1'b0;
+  assign M_AXI_AWLOCK = 2'b00;
   assign M_AXI_AWCACHE = 4'b0011;
   assign M_AXI_AWPROT = 3'h0;
   assign M_AXI_AWQOS = 4'h0;
@@ -188,7 +188,7 @@ module axi_master_interface #
   assign M_AXI_ARLEN = arlen;
   assign M_AXI_ARSIZE = C_M_AXI_ADDRMASK_WIDTH;
   assign M_AXI_ARBURST = BURST_INCR;
-  assign M_AXI_ARLOCK = 1'b0;
+  assign M_AXI_ARLOCK = 2'b00;
   assign M_AXI_ARCACHE = 4'b0011;
   assign M_AXI_ARPROT = 3'h0;
   assign M_AXI_ARQOS = 4'h0;
