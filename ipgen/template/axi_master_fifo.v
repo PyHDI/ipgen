@@ -40,6 +40,10 @@ module axi_master_fifo #
     The resulting ERROR flag will not be useful */ 
    parameter integer C_M_AXI_SUPPORTS_WRITE        = 1,
    parameter integer C_M_AXI_SUPPORTS_READ         = 1,
+
+   // AxCACHE, AxUSER
+   parameter C_M_AXI_AxCACHE_MODE = 4'b0011, // use 4'b1111 for ACP
+   parameter C_M_AXI_AxUSER_MODE = 1'b1,
    
    // Example design parameters
    // Base address of targeted slave
@@ -220,10 +224,10 @@ module axi_master_fifo #
   // INCR burst type is usually used, except for keyhole bursts
   assign M_AXI_AWBURST = 2'b01;
   assign M_AXI_AWLOCK = 2'b00;
-  assign M_AXI_AWCACHE = 4'b0011;
+  assign M_AXI_AWCACHE = C_M_AXI_AxCACHE_MODE;
   assign M_AXI_AWPROT = 3'h0;
   assign M_AXI_AWQOS = 4'h0;
-  assign M_AXI_AWUSER = 'b0;
+  assign M_AXI_AWUSER = C_M_AXI_AxUSER_MODE;
   assign M_AXI_AWVALID = awvalid;
   
   //----------------------------------------------------------------------------
@@ -258,10 +262,10 @@ module axi_master_fifo #
   // INCR burst type is usually used, except for keyhole bursts
   assign M_AXI_ARBURST = 2'b01;
   assign M_AXI_ARLOCK = 2'b00;
-  assign M_AXI_ARCACHE = 4'b0011;
+  assign M_AXI_ARCACHE = C_M_AXI_AxCACHE_MODE;
   assign M_AXI_ARPROT = 3'h0;
   assign M_AXI_ARQOS = 4'h0;
-  assign M_AXI_ARUSER = 'b0;
+  assign M_AXI_ARUSER = C_M_AXI_AxUSER_MODE;
   assign M_AXI_ARVALID = arvalid;
 
   //----------------------------------------------------------------------------    

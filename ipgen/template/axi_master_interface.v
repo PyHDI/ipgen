@@ -32,6 +32,8 @@ module axi_master_interface #
    parameter integer C_M_AXI_BUSER_WIDTH           = 1,
    parameter integer C_M_AXI_SUPPORTS_WRITE        = 1,
    parameter integer C_M_AXI_SUPPORTS_READ         = 1,
+   parameter C_M_AXI_AxCACHE_MODE = 4'b0011, // use 4'b1111 for ACP
+   parameter C_M_AXI_AxUSER_MODE = 1'b1,
    parameter C_M_AXI_TARGET = 'h00000000
    )
   (
@@ -157,10 +159,10 @@ module axi_master_interface #
   assign M_AXI_AWSIZE = C_M_AXI_ADDRMASK_WIDTH;
   assign M_AXI_AWBURST = BURST_INCR;
   assign M_AXI_AWLOCK = 2'b00;
-  assign M_AXI_AWCACHE = 4'b0011;
+  assign M_AXI_AWCACHE = C_M_AXI_AxCACHE_MODE;
   assign M_AXI_AWPROT = 3'h0;
   assign M_AXI_AWQOS = 4'h0;
-  assign M_AXI_AWUSER = 'b1;
+  assign M_AXI_AWUSER = C_M_AXI_AxUSER_MODE;
   assign M_AXI_AWVALID = awvalid;
   assign awready = M_AXI_AWREADY;
   
@@ -189,10 +191,10 @@ module axi_master_interface #
   assign M_AXI_ARSIZE = C_M_AXI_ADDRMASK_WIDTH;
   assign M_AXI_ARBURST = BURST_INCR;
   assign M_AXI_ARLOCK = 2'b00;
-  assign M_AXI_ARCACHE = 4'b0011;
+  assign M_AXI_ARCACHE = C_M_AXI_AxCACHE_MODE;
   assign M_AXI_ARPROT = 3'h0;
   assign M_AXI_ARQOS = 4'h0;
-  assign M_AXI_ARUSER = 'b1;
+  assign M_AXI_ARUSER = C_M_AXI_AxUSER_MODE;
   assign M_AXI_ARVALID = arvalid;
   assign arready = M_AXI_ARREADY;
 

@@ -396,7 +396,7 @@ module test;
   assign {{ master.name }}_AXI_AWLOCK = 2'b00;
   assign {{ master.name }}_AXI_AWCACHE = 4'b0011;
   assign {{ master.name }}_AXI_AWQOS = 4'b0;
-  assign {{ master.name }}_AXI_AWUSER = 0;
+  assign {{ master.name }}_AXI_AWUSER = 1'b1;
 
   assign {{ master.name }}_AXI_WLAST = 1'b1;
   assign {{ master.name }}_AXI_WUSER = 0;
@@ -408,7 +408,7 @@ module test;
   assign {{ master.name }}_AXI_ARLOCK = 2'b00;
   assign {{ master.name }}_AXI_ARCACHE = 4'b0011;
   assign {{ master.name }}_AXI_ARQOS = 4'b0;
-  assign {{ master.name }}_AXI_ARUSER = 0;
+  assign {{ master.name }}_AXI_ARUSER = 1'b1;
 {%- endif %}
 {% endfor %}
 

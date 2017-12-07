@@ -43,6 +43,12 @@ module {{ ipname }} #
 {%- endif %}
 {% endfor %}
 
+{%- if use_acp %}
+   parameter C_M_AXI_AxCACHE = 4'b1111,
+{%- else %}
+   parameter C_M_AXI_AxCACHE = 4'b0011,
+{%- endif %}
+
    // Address offset on DRAM
    parameter C_M_AXI_TARGET = 'h00000000
    )
@@ -418,7 +424,7 @@ module {{ ipname }} #
 {%- if not master.lite %}
   axi_master_interface #
 {%- else %}
-  axi_lite_slave_interface #
+  axi_lite_master_interface #
 {%- endif %}
    (
     .C_M_AXI_ADDR_WIDTH(C_{{ master.name }}_AXI_ADDR_WIDTH),
@@ -432,6 +438,9 @@ module {{ ipname }} #
     .C_M_AXI_BUSER_WIDTH(C_{{ master.name }}_AXI_BUSER_WIDTH),
     .C_M_AXI_SUPPORTS_WRITE(C_{{ master.name }}_AXI_SUPPORTS_WRITE),
     .C_M_AXI_SUPPORTS_READ(C_{{ master.name }}_AXI_SUPPORTS_READ),
+{%- if not master.lite %}
+    .C_M_AXI_AxCACHE_MODE(C_M_AXI_AxCACHE),
+{%- endif %}
 {%- endif %}
     .C_M_AXI_TARGET(C_M_AXI_TARGET)
    )

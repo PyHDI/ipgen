@@ -60,11 +60,12 @@ def main():
     optparser.add_option("--usertest", dest="usertest",
                          default=None, help="user-defined test code file, default: None")
 
-    optparser.add_option("--skip_not_found", action="store_true", dest="skip_not_found",
-                         default=False, help="skip not found modules")
     optparser.add_option("--ignore_protocol_error", action="store_true",
                          dest="ignore_protocol_error",
                          default=False, help="ignore protocol error")
+
+    optparser.add_option("--skip_not_found", action="store_true", dest="skip_not_found",
+                         default=False, help="skip not found modules")
     optparser.add_option("--silent", action="store_true", dest="silent",
                          default=False, help="silent mode")
 
@@ -108,6 +109,7 @@ def main():
     configs = {
         'single_clock': True,
         'if_type': 'axi',
+        'use_acp': False,
         'output': 'out.v',
         'sim_addrwidth': 27,
         'hperiod_ulogic': 5,

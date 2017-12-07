@@ -52,6 +52,7 @@ class SystemBuilder(object):
 
                ext_addrwidth=32, ext_burstlength=256,
                single_clock=False,
+               use_acp=False,
                hdlname=None, common_hdlname=None,
                testname=None,
                ipcore_version=None,
@@ -62,6 +63,7 @@ class SystemBuilder(object):
                tcl_parameters=None, tcl_ports=None,
                clock_hperiod_userlogic=None,
                clock_hperiod_bus=None,
+
                ignore_protocol_error=False):
 
         ext_burstlen_width = log2(ext_burstlength)
@@ -98,6 +100,7 @@ class SystemBuilder(object):
             'clock_hperiod_userlogic': clock_hperiod_userlogic,
             'clock_hperiod_bus': clock_hperiod_bus,
             'single_clock': single_clock,
+            'use_acp': use_acp,
 
             'ignore_protocol_error': ignore_protocol_error,
         }
@@ -108,7 +111,8 @@ class SystemBuilder(object):
 
     def build(self, configs, topmodule, ipname, filelist,
               include=None, define=None, memimg=None, usertest=None,
-              skip_not_found=False, ignore_protocol_error=False, silent=False):
+              ignore_protocol_error=False,
+              skip_not_found=False, silent=False):
 
         if (configs['single_clock'] and
                 (configs['hperiod_ulogic'] != configs['hperiod_bus'])):
@@ -172,7 +176,8 @@ class SystemBuilder(object):
                                 def_top_ioports, name_top_ioports,
                                 ext_addrwidth=configs['ext_addrwidth'],
                                 ext_burstlength=default_ext_burstlength,
-                                single_clock=configs['single_clock'])
+                                single_clock=configs['single_clock'],
+                                use_acp=configs['use_acp'])
 
         # finalize of code generation
         synthesized_code_list = []
@@ -538,6 +543,8 @@ class SystemBuilder(object):
                                 ext_addrwidth=configs['ext_addrwidth'],
                                 ext_burstlength=default_ext_burstlength,
                                 single_clock=configs['single_clock'],
+                                use_acp=configs['use_acp'],
+
                                 hdlname=hdlname,
                                 memimg=copied_memimg,
                                 binfile=binfile,
