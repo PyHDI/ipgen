@@ -26,9 +26,8 @@ setup(name='ipgen',
       packages=find_packages(),
       package_data={'ipgen.template': ['*.*'], },
       install_requires=['pyverilog>=1.1.2', 'Jinja2>=2.10'],
-      extras_require={
-          'test': ['pytest>=3.2', 'pytest-pythonpath>=0.7'],
-      },
+      #extras_require={
+      #},
       entry_points="""
       [console_scripts]
       %s = ipgen.run_ipgen:main
