@@ -58,36 +58,33 @@ Installation
 Requirements
 --------------------
 
-- Python: 2.7, 3.4 or later
-
-Python3 is recommended.
-
-- Icarus Verilog: 0.9.7 or later
+- Python3: 3.6 or later
+- Icarus Verilog: 10.1 or later
 
 Install on your platform. For exmple, on Ubuntu:
 
     sudo apt-get install iverilog
 
-- Jinja2: 2.8 or later
-- pytest: 2.8.2 or later
+- Jinja2: 2.10 or later
+- pytest: 3.2 or later
 - pytest-pythonpath: 0.7 or later
 
 Install on your python environment by using pip.
 
-    pip install jinja2 pytest pytest-pythonpath
+    pip3 install jinja2 pytest pytest-pythonpath
 
-- Pyverilog: 1.1.1 or later
+- Pyverilog: 1.1.2 or later
 
 Install from pip:
 
-    pip install pyverilog
+    pip3 install pyverilog
 
 Install
 --------------------
 
 Install IPgen.
 
-    python setup.py install
+    python3 setup.py install
 
 
 Getting Started

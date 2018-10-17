@@ -5,7 +5,7 @@ IP-core package generator for AXI4/Avalon
 
 Copyright (C) 2015, Shinya Takamaeda-Yamazaki
 
-E-mail: takamaeda\_at\_ist.hokudai.ac.jp
+E-mail: takamaeda_at_ist.hokudai.ac.jp
 
 License
 =======
@@ -26,33 +26,32 @@ If you use IPgen in your research, please cite my paper about Pyverilog.
 
 ::
 
-    @inproceedings{Takamaeda:2015:ARC:Pyverilog,
-    title={Pyverilog: A Python-Based Hardware Design Processing Toolkit for Verilog HDL},
-    author={Takamaeda-Yamazaki, Shinya},
-    booktitle={Applied Reconfigurable Computing},
-    month={Apr},
-    year={2015},
-    pages={451-460},
-    volume={9040},
-    series={Lecture Notes in Computer Science},
-    publisher={Springer International Publishing},
-    doi={10.1007/978-3-319-16214-0_42},
-    url={http://dx.doi.org/10.1007/978-3-319-16214-0_42},
-    }
+   @inproceedings{Takamaeda:2015:ARC:Pyverilog,
+   title={Pyverilog: A Python-Based Hardware Design Processing Toolkit for Verilog HDL},
+   author={Takamaeda-Yamazaki, Shinya},
+   booktitle={Applied Reconfigurable Computing},
+   month={Apr},
+   year={2015},
+   pages={451-460},
+   volume={9040},
+   series={Lecture Notes in Computer Science},
+   publisher={Springer International Publishing},
+   doi={10.1007/978-3-319-16214-0_42},
+   url={http://dx.doi.org/10.1007/978-3-319-16214-0_42},
+   }
 
-What's IPgen?
+What’s IPgen?
 =============
 
 IPgen is a lightweight IP-core package synthesizer from abstract RTL
 sources. You can implement both AXI4 and Avalon IP-core by using the
 provided abstract interfaces.
 
--  ipgen\_master\_memory: memory-mapped access interface (master)
--  ipgen\_slave\_memory: memory-mapped access interface (slave)
--  ipgen\_master\_lite\_memory: memory-mapped access lite interface
+-  ipgen_master_memory: memory-mapped access interface (master)
+-  ipgen_slave_memory: memory-mapped access interface (slave)
+-  ipgen_master_lite_memory: memory-mapped access lite interface
    (master)
--  ipgen\_slave\_lite\_memory: memory-mapped access lite interface
-   (slave)
+-  ipgen_slave_lite_memory: memory-mapped access lite interface (slave)
 
 Installation
 ============
@@ -60,35 +59,32 @@ Installation
 Requirements
 ------------
 
--  Python: 2.7, 3.4 or later
-
-Python3 is recommended.
-
--  Icarus Verilog: 0.9.7 or later
+-  Python3: 3.6 or later
+-  Icarus Verilog: 10.1 or later
 
 Install on your platform. For exmple, on Ubuntu:
 
 ::
 
-    sudo apt-get install iverilog
+   sudo apt-get install iverilog
 
--  Jinja2: 2.8 or later
--  pytest: 2.8.2 or later
+-  Jinja2: 2.10 or later
+-  pytest: 3.2 or later
 -  pytest-pythonpath: 0.7 or later
 
 Install on your python environment by using pip.
 
 ::
 
-    pip install jinja2 pytest pytest-pythonpath
+   pip3 install jinja2 pytest pytest-pythonpath
 
--  Pyverilog: 1.1.1 or later
+-  Pyverilog: 1.1.2 or later
 
 Install from pip:
 
 ::
 
-    pip install pyverilog
+   pip3 install pyverilog
 
 Install
 -------
@@ -97,7 +93,7 @@ Install IPgen.
 
 ::
 
-    python setup.py install
+   python3 setup.py install
 
 Getting Started
 ===============
@@ -106,40 +102,40 @@ You can use the ipgen command from your console.
 
 ::
 
-    ipgen
+   ipgen
 
-You can find the sample projects in 'tests'. Now let's see
-'tests/memcpy'. There is an input source code.
+You can find the sample projects in ‘tests’. Now let’s see
+‘tests/memcpy’. There is an input source code.
 
 -  memcpy.v : User-defined Verilog code using IPgen abstract memory
    interfaces
 
-Then type 'make' and 'make run' to simulate sample system.
+Then type ‘make’ and ‘make run’ to simulate sample system.
 
 ::
 
-    make build
-    make sim
+   make build
+   make sim
 
 Or type commands as below directly.
 
 ::
 
-    ipgen default.config -t memcpy -I include tests/memcpy/memcpy.v
-    iverilog -I memcpy_ip_v1_00_a/hdl/verilog/ memcpy_ip_v1_00_a/test/test_memcpy_ip.v 
-    ./a.out
+   ipgen default.config -t memcpy -I include tests/memcpy/memcpy.v
+   iverilog -I memcpy_ip_v1_00_a/hdl/verilog/ memcpy_ip_v1_00_a/test/test_memcpy_ip.v 
+   ./a.out
 
-IPgen compiler generates a directory for IP-core (memcpy\_ip\_v1\_00\_a,
-in this example).
+IPgen compiler generates a directory for IP-core (memcpy_ip_v1_00_a, in
+this example).
 
-'memcpy\_ip\_v1\_00\_a.v' includes - IP-core RTL design
-(hdl/verilog/memcpy\_ip.v) - Test bench (test/test\_memcpy\_ip.v) - XPS
-setting files (memcpy\_ip\_v2\_1\_0.{mpd,pao,tcl}) - IP-XACT file
+‘memcpy_ip_v1_00_a.v’ includes - IP-core RTL design
+(hdl/verilog/memcpy_ip.v) - Test bench (test/test_memcpy_ip.v) - XPS
+setting files (memcpy_ip_v2_1_0.{mpd,pao,tcl}) - IP-XACT file
 (component.xml)
 
 A bit-stream can be synthesized by using Xilinx Platform Studio, Xilinx
 Vivado, and Altera Qsys. In case of XPS, please copy the generated
-IP-core into 'pcores' directory of XPS project.
+IP-core into ‘pcores’ directory of XPS project.
 
 IPgen Command Options
 =====================
@@ -149,7 +145,7 @@ Command
 
 ::
 
-    ipgen [config] [-t topmodule] [--ipname=ipname] [--memimg=memimg_name] [--usertest=usertest_name] [-I include]+ [-D define]+ [file]+
+   ipgen [config] [-t topmodule] [--ipname=ipname] [--memimg=memimg_name] [--usertest=usertest_name] [-I include]+ [-D define]+ [file]+
 
 Description
 -----------
@@ -161,19 +157,19 @@ Description
 
 -  -t
 
-   -  Top-module name of user logic, default: 'top'
+   -  Top-module name of user logic, default: ‘top’
 
--  --ipname
+-  -–ipname
 
-   -  IP-core package name, default: '(topmodule)*ip*\ (version)'
+   -  IP-core package name, default: ‘(topmodule)*ip*\ (version)’
 
--  --memimg
+-  –-memimg
 
    -  Memory image file in HEX (option). The file is copied into test
       directory. If no file is assigned, the array is initialized with
       incremental values.
 
--  --usertest
+-  –-usertest
 
    -  User-defined test code file (option). The code is copied into
       testbench script.
