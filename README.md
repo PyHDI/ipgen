@@ -59,25 +59,16 @@ Requirements
 --------------------
 
 - Python3: 3.6 or later
+
 - Icarus Verilog: 10.1 or later
 
-Install on your platform. For exmple, on Ubuntu:
-
-    sudo apt-get install iverilog
+    sudo apt install iverilog
 
 - Jinja2: 2.10 or later
-- pytest: 3.2 or later
-- pytest-pythonpath: 0.7 or later
-
-Install on your python environment by using pip.
-
-    pip3 install jinja2 pytest pytest-pythonpath
-
 - Pyverilog: 1.1.2 or later
 
-Install from pip:
+    pip3 install jinja2 pyverilog
 
-    pip3 install pyverilog
 
 Install
 --------------------
@@ -133,31 +124,31 @@ Command
 Description
 ------------------------------
 
-* config
+- config
     - System configuration file which includes memory and device specifications
 
-* -t
+- -t
     - Top-module name of user logic, default: 'top'
 
-* --ipname
+- --ipname
     - IP-core package name, default: '(topmodule)_ip_(version)'
 
-* --memimg
+- --memimg
     - Memory image file in HEX (option).
       The file is copied into test directory.
       If no file is assigned, the array is initialized with incremental values.
 
-* --usertest
+- --usertest
     - User-defined test code file (option).
       The code is copied into testbench script.
 
-* -I
+- -I
     - Include path
     
-* -D
+- -D
     - Macro definition
     
-* file
+- file
     - User-logic Verilog file (.v)
 
 

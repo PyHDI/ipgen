@@ -60,31 +60,15 @@ Requirements
 ------------
 
 -  Python3: 3.6 or later
+
 -  Icarus Verilog: 10.1 or later
 
-Install on your platform. For exmple, on Ubuntu:
-
-::
-
-   sudo apt-get install iverilog
+   sudo apt install iverilog
 
 -  Jinja2: 2.10 or later
--  pytest: 3.2 or later
--  pytest-pythonpath: 0.7 or later
-
-Install on your python environment by using pip.
-
-::
-
-   pip3 install jinja2 pytest pytest-pythonpath
-
 -  Pyverilog: 1.1.2 or later
 
-Install from pip:
-
-::
-
-   pip3 install pyverilog
+   pip3 install jinja2 pyverilog
 
 Install
 -------
