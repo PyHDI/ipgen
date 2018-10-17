@@ -25,9 +25,9 @@ setup(name='ipgen',
       url='https://github.com/PyHDI/ipgen',
       packages=find_packages(),
       package_data={'ipgen.template': ['*.*'], },
-      install_requires=['pyverilog>=1.1.1', 'Jinja2>=2.8'],
+      install_requires=['pyverilog>=1.1.2', 'Jinja2>=2.10'],
       extras_require={
-          'test': ['pytest>=2.8.2', 'pytest-pythonpath>=0.7'],
+          'test': ['pytest>=3.2', 'pytest-pythonpath>=0.7'],
       },
       entry_points="""
       [console_scripts]
