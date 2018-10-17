@@ -63,10 +63,14 @@ Requirements
 
 -  Icarus Verilog: 10.1 or later
 
+::
+
    sudo apt install iverilog
 
 -  Jinja2: 2.10 or later
 -  Pyverilog: 1.1.2 or later
+
+::
 
    pip3 install jinja2 pyverilog
 
