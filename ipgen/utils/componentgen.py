@@ -1532,10 +1532,19 @@ class ComponentGen(object):
     def mkCoreExtensions(self):
         coreextensions = self.doc.createElement('xilinx:coreExtensions')
         supported = self.doc.createElement('xilinx:supportedFamilies')
+
+        # Zynq
         family = self.doc.createElement('xilinx:family')
         self.setAttribute(family, 'xilinx:lifeCycle', 'Production')
         self.setText(family, 'zynq')
         supported.appendChild(family)
+
+        # Zynq Ultrascale+
+        family = self.doc.createElement('xilinx:family')
+        self.setAttribute(family, 'xilinx:lifeCycle', 'Production')
+        self.setText(family, 'zynquplus')
+        supported.appendChild(family)
+
         coreextensions.appendChild(supported)
         taxonomies = self.doc.createElement('xilinx:taxonomies')
         taxonomies.appendChild(self.mkTextNode(

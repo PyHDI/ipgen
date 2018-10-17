@@ -116,7 +116,7 @@ def main():
         'hperiod_bus': 5,
     }
 
-    confp = configparser.SafeConfigParser()
+    confp = configparser.ConfigParser()
 
     if configfile is not None:
         confp.read(configfile)
