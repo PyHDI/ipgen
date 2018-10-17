@@ -62,20 +62,25 @@ Requirements
 
 - Icarus Verilog: 10.1 or later
 
-    sudo apt install iverilog
+```
+sudo apt install iverilog
+```
 
 - Jinja2: 2.10 or later
 - Pyverilog: 1.1.2 or later
 
-    pip3 install jinja2 pyverilog
-
+```
+pip3 install jinja2 pyverilog
+```
 
 Install
 --------------------
 
 Install IPgen.
 
-    python3 setup.py install
+```
+python3 setup.py install
+```
 
 
 Getting Started
@@ -83,7 +88,9 @@ Getting Started
 
 You can use the ipgen command from your console.
 
-    ipgen
+```
+ipgen
+```
 
 You can find the sample projects in 'tests'. Now let's see 'tests/memcpy'. There is an input source code.
 
@@ -91,14 +98,18 @@ You can find the sample projects in 'tests'. Now let's see 'tests/memcpy'. There
 
 Then type 'make' and 'make run' to simulate sample system.
 
-    make build
-    make sim
+```
+make build
+make sim
+```
 
 Or type commands as below directly.
 
-    ipgen default.config -t memcpy -I include tests/memcpy/memcpy.v
-    iverilog -I memcpy_ip_v1_00_a/hdl/verilog/ memcpy_ip_v1_00_a/test/test_memcpy_ip.v 
-    ./a.out
+```
+ipgen default.config -t memcpy -I include tests/memcpy/memcpy.v
+iverilog -I memcpy_ip_v1_00_a/hdl/verilog/ memcpy_ip_v1_00_a/test/test_memcpy_ip.v 
+./a.out
+```
 
 IPgen compiler generates a directory for IP-core (memcpy\_ip\_v1\_00\_a, in this example).
 
@@ -118,7 +129,9 @@ IPgen Command Options
 Command
 ------------------------------
 
-    ipgen [config] [-t topmodule] [--ipname=ipname] [--memimg=memimg_name] [--usertest=usertest_name] [-I include]+ [-D define]+ [file]+
+```
+ipgen [config] [-t topmodule] [--ipname=ipname] [--memimg=memimg_name] [--usertest=usertest_name] [-I include]+ [-D define]+ [file]+
+```
 
 
 Description
