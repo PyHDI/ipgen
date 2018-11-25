@@ -9,7 +9,7 @@ version = m.group(1) if m is not None else '0.0.0'
 
 
 def read(filename):
-    return open(os.path.join(os.path.dirname(__file__), filename)).read()
+    return open(os.path.join(os.path.dirname(__file__), filename), encoding='utf8').read()
 
 
 import sys
@@ -25,7 +25,7 @@ setup(name='ipgen',
       url='https://github.com/PyHDI/ipgen',
       packages=find_packages(),
       package_data={'ipgen.template': ['*.*'], },
-      install_requires=['pyverilog>=1.1.2', 'Jinja2>=2.10'],
+      install_requires=['pyverilog>=1.1.3', 'Jinja2>=2.10'],
       #extras_require={
       #},
       entry_points="""

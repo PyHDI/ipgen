@@ -68,7 +68,7 @@ Requirements
    sudo apt install iverilog
 
 -  Jinja2: 2.10 or later
--  Pyverilog: 1.1.2 or later
+-  Pyverilog: 1.1.3 or later
 
 ::
 
@@ -147,9 +147,9 @@ Description
 
    -  Top-module name of user logic, default: ‘top’
 
--  -–ipname
+-  –-ipname
 
-   -  IP-core package name, default: ‘(topmodule)*ip*\ (version)’
+   -  IP-core package name, default: ‘(topmodule)_ip_(version)’
 
 -  –-memimg
 
