@@ -67,7 +67,7 @@ sudo apt install iverilog
 ```
 
 - Jinja2: 2.10 or later
-- Pyverilog: 1.1.2 or later
+- Pyverilog: 1.1.3 or later
 
 ```
 pip3 install jinja2 pyverilog
